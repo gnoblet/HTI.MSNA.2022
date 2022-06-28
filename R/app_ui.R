@@ -9,9 +9,12 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    fluidPage(
-      h1("HTI.MSNA.2022")
+    navbarPage("HTI - MSNA 2022 - Résultats préliminaires",
+               mod_welcome_ui("welcome_1"),
+               mod_indicator_main_ui("indicator_main_1"),
+               theme = "custom"
     )
+
   )
 }
 
