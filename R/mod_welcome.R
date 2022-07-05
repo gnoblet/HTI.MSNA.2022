@@ -41,12 +41,6 @@ mod_welcome_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-    x <- 1:5
-    y <- 6:10
-
-    output$welcome_plot <- renderPlot(
-      plot(x,y)
-    )
   })
 }
 

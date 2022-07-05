@@ -40,7 +40,7 @@ mod_indicator_main_ui <- function(id){
       )
       ),
     shiny::mainPanel(
-      h3(shiny::textOutput(ns("main_indicator_name"))),
+      shiny::h3(shiny::textOutput(ns("main_indicator_name"))),
       reactable::reactableOutput(ns("main_table")))
   )
 

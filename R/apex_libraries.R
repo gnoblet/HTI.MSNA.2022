@@ -1,16 +1,10 @@
-
 pkgs <- c(
-  "dashboardthemes",
   "devtools",
   "dplyr",
   "lubridate",
   "golem",
   "pins",
   "shiny",
-  "shinyjs",
-  "shinyWidgets",
-  "shinydashboard",
-  "shinydashboardPlus",
   "reactable",
   "impactR"
 )

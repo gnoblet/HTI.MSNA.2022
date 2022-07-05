@@ -19,7 +19,9 @@ Imports:
     readr,
     extrafont,
     reactablefmtr,
-    bslib
+    bslib,
+    devtools,
+    pins
 Suggests: 
     spelling,
     testthat (>= 3.0.0)
