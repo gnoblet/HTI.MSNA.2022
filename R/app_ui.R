@@ -9,13 +9,29 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    navbarPage("HTI - MSNA 2022 - Résultats préliminaires",
-               mod_welcome_ui("welcome_1"),
-               mod_indicator_main_ui("indicator_main_1"),
-               theme = "custom"
+      shiny::navbarPage(
+        "HTI - MSNA 2022 - Résultats préliminaires",
+        mod_welcome_ui("welcome_1"),
+        # shiny::navbarMenu(
+        #   "Indicateurs",
+        #   menuName = "indicators",
+          mod_indicator_main_ui("indicator_main_1"),
+          mod_indicator_admin1_ui("indicator_admin1_1")
+          # )
+        )
     )
+               # ,
+               # theme =  bslib::bs_theme(
+               #   bootswatch = "cerulean",
+               #   bg = "#FFFFFF",
+               #   fg = "#58585A",
+               #   primary = "#EE5859",
+               #   secondary = "#FFFFFF",
+               #   success = "#EE5859",
+               #   warning = "#EE5859",
+               #   danger = "#EE5859")
 
-  )
+
 }
 
 #' Add external Resources to the Application

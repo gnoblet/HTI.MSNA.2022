@@ -16,7 +16,10 @@ Imports:
     shinyjs,
     shinydashboard,
     pkgload,
-    readr
+    readr,
+    extrafont,
+    reactablefmtr,
+    bslib
 Suggests: 
     spelling,
     testthat (>= 3.0.0)

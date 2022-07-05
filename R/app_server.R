@@ -8,4 +8,5 @@ app_server <- function(input, output, session) {
   # Your application server logic
   mod_welcome_server("welcome_1")
   mod_indicator_main_server("indicator_main_1")
+  mod_indicator_admin1_server("indicator_admin1_1")
 }

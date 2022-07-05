@@ -10,67 +10,42 @@
 mod_indicator_main_ui <- function(id){
   ns <- NS(id)
 
-  shiny::tabPanel("Quelques indicateurs",
-                  # shiny::fluidRow(
-                  #   shinyWidgets::pickerInput(
-                  #     inputId = ns("main_rq"),
-                  #     label = "Secteur",
-                  #     choices = unique(HTI.MSNA.2022::data_main_simple$rq),
-                  #     selected = "EPHA",
-                  #     options = list(
-                  #       `actions-box` = TRUE,
-                  #       `deselect-all-text` = "Aucun",
-                  #       `select-all-text` = "Tous"),
-                  #     multiple = TRUE
-                  #   ),
-                  #   shinyWidgets::pickerInput(
-                  #     inputId = ns("main_sub_rq"),
-                  #     label = "Sous-secteur",
-                  #     choices = unique(HTI.MSNA.2022::data_main_simple$sub_rq),
-                  #     selected = "Accès à l'eau",
-                  #     options = list(
-                  #       `actions-box` = TRUE,
-                  #       `deselect-all-text` = "Aucun",
-                  #       `select-all-text` = "Tous"),
-                  #     multiple = TRUE
-                  #   ),
-                  #   shinyWidgets::pickerInput(
-                  #     inputId = ns("main_indicator"),
-                  #     label = "Indicateur",
-                  #     choices = unique(HTI.MSNA.2022::data_main_simple$indicator),
-                  #     selected = "% de ménages par source d'eau de boisson",
-                  #     options = list(
-                  #       `actions-box` = TRUE,
-                  #       `deselect-all-text` = "Aucun",
-                  #       `select-all-text` = "Tous"),
-                  #     multiple = TRUE
-                  #   )
-                  # ),
-                  shiny::fluidRow(
-                    shiny::selectInput(
-                      inputId = ns("main_rq"),
-                      label = "Secteur",
-                      choices = unique(HTI.MSNA.2022::data_main_simple$rq),
-                      selected = "EPHA"
-                    ),
-                    shiny::selectInput(
-                      inputId = ns("main_sub_rq"),
-                      label = "Sous-secteur",
-                      choices = unique(HTI.MSNA.2022::data_main_simple$sub_rq),
-                      selected = "Accès à l'eau"
-                    ),
-                    shiny::selectInput(
-                      inputId = ns("main_indicator"),
-                      label = "Indicateur",
-                      choices = unique(HTI.MSNA.2022::data_main_simple$indicator),
-                      selected = "% de ménages par source d'eau de boisson"
-                    )
-                  ),
-
-                  shiny::fluidRow((reactable::reactableOutput(ns("main_table"))
-                  )
-                  )
+  shiny::tabPanel(
+    "Global",
+    shiny::sidebarPanel(
+      width = 3,
+      shiny::fluidRow(
+          shiny::selectInput(
+            inputId = ns("main_rq"),
+            label = "Secteur",
+            choices = unique(HTI.MSNA.2022::data_main_simple$rq),
+            selected = "EPHA")
+        ),
+      shiny::fluidRow(
+          shiny::selectInput(
+            inputId = ns("main_sub_rq"),
+            label = "Sous-secteur",
+            choices = unique(HTI.MSNA.2022::data_main_simple$sub_rq),
+            selected = "Accès à l'eau")
+        ),
+      shiny::fluidRow(
+          shiny::selectInput(
+            inputId = ns("main_indicator"),
+            label = "Indicateur",
+            choices = unique(HTI.MSNA.2022::data_main_simple$indicator),
+            selected = "% de ménages par source d'eau de boisson")
+        ),
+      shiny::fluidRow(
+        shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
+      )
+      ),
+    shiny::mainPanel(
+      h3(shiny::textOutput(ns("main_indicator_name"))),
+      reactable::reactableOutput(ns("main_table")))
   )
+
+
+
 }
 
 #' indicator_main Server Functions
@@ -80,13 +55,12 @@ mod_indicator_main_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-    analysis_main_simple <- HTI.MSNA.2022::data_main_simple
-
+    analysis_main_simple <- HTI.MSNA.2022::data_main_simple |>
+      dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)))
 
     shiny::observeEvent(input$main_rq, {
-      shiny::req(input$rq)
       shiny::updateSelectInput(session,
-                               ns("main_sub_rq"),
+                               "main_sub_rq",
                                choices = analysis_main_simple |>
                                  dplyr::filter(
                                    rq == input$main_rq
@@ -97,19 +71,60 @@ mod_indicator_main_server <- function(id){
     })
 
     shiny::observeEvent(input$main_sub_rq, {
-      shiny::req(input$rq, input$sub_rq)
       shiny::updateSelectInput(session,
-                               ns("main_indicator"),
+                               "main_indicator",
                                choices = analysis_main_simple |>
                                  dplyr::filter(
                                    rq == input$main_rq,
-                                   sub_rq == input$sub_rq
+                                   sub_rq == input$main_sub_rq
                                  ) |>
                                  dplyr::pull(indicator) |>
                                  unique()
       )
     })
 
+
+    output$main_indicator_name <- shiny::renderText({
+      analysis_filtered <- analysis_main_simple |>
+        dplyr::filter(indicator == input$main_indicator) |>
+        dplyr::pull(indicator) |>
+        unique()
+    }
+    )
+
+    output$main_table <- reactable::renderReactable({
+      analysis_filtered <- analysis_main_simple |>
+        dplyr::filter(rq == input$main_rq,
+                      sub_rq == input$main_sub_rq,
+                      indicator == input$main_indicator) |>
+        dplyr::select(recall, subset, choices_label, stat) |>
+        dplyr::arrange(dplyr::desc(stat))
+
+      rctbl_indicator <- unique(analysis_filtered$indicator)
+
+      analysis_filtered <- analysis_filtered |>
+        dplyr::rename("Statistique" = stat, "Option de réponse" = choices_label, "Sous-ensemble" = subset, "Période de rappel" = recall) |>
+        janitor::remove_empty(which = "cols") |>
+        as.data.frame()
+
+      reactable::reactable(
+        analysis_filtered,
+        rownames = FALSE,
+        bordered = TRUE,
+        # striped = TRUE,
+        highlight = TRUE,
+        # compact = TRUE,
+        filterable = TRUE,
+        height = "800px",
+        class = "reactable",
+        style = list(fontFamily = "Leelawadee UI"),
+         defaultColDef = colDef(
+           cell = reactablefmtr::color_tiles(
+             analysis_filtered,
+             colors = c("white","#EE5859"),
+             box_shadow = TRUE),
+           align = "center"))
+    })
 
 })}
 
@@ -122,30 +137,5 @@ mod_indicator_main_server <- function(id){
 
 
 
-# output$main_table <- reactable::renderReactable({
-#   dt <- analysis_filtered() |>
-#     dplyr::select(rq, sub_rq, indicator, analysis_name, choices_label, stat, group_name) |>
-#     dplyr::arrange(dplyr::desc(stat)) |>
-#     # janitor::remove_empty(which = "cols") |>
-#     as.data.frame()
-#
-#   reactbl <- reactable::reactable(dt,
-#                                   rownames = F,
-#                                   bordered = TRUE,
-#                                   striped = TRUE,
-#                                   highlight = TRUE,
-#                                   compact = T,
-#                                   filterable = T,
-#                                   height = "700px",
-#                                   style = list(fontFamily = "Leelawadee UI"),
-#                                   defaultColDef = colDef(
-#                                     cell = reactablefmtr::color_tiles(
-#                                       dt,
-#                                       colors = c("white","#EE5859"),
-#                                       span = TRUE),
-#                                     align = "center")
-#   )
-#
-#   return(reactbl)
-# })
+
 
