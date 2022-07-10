@@ -6,7 +6,9 @@ pkgs <- c(
   "pins",
   "shiny",
   "reactable",
-  "impactR"
+  "impactR",
+  "visualizeR",
+  "ggblanket"
 )
 
 for (i in pkgs) {

@@ -103,12 +103,12 @@ mod_indicator_admin1_server <- function(id){
         dplyr::filter(rq == input$main_rq,
                       sub_rq == input$main_sub_rq,
                       indicator == input$main_indicator) |>
-        dplyr::arrange(dplyr::desc(stat)) |>
         tidyr::pivot_wider(
           id_cols = c(id_analysis, indicator, choices, recall, subset, choices_label),
           names_from = group_disagg_label,
           values_from = stat) |>
         impactR::deselect(id_analysis, choices, indicator) |>
+        dplyr::arrange(dplyr::desc(dplyr::across(where(is.numeric)))) |>
         dplyr::rename("Option de réponse" = choices_label, "Sous-ensemble" = subset, "Période de rappel" = recall) |>
         janitor::remove_empty(which = "cols") |>
         dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(is.na(x), 0, x)))

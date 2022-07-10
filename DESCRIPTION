@@ -21,7 +21,9 @@ Imports:
     reactablefmtr,
     bslib,
     devtools,
-    pins
+    pins,
+    ggblanket,
+    visualizeR
 Suggests: 
     spelling,
     testthat (>= 3.0.0)
