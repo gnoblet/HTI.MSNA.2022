@@ -11,39 +11,58 @@ mod_graph_main_ui <- function(id){
   ns <- NS(id)
 
   shiny::tabPanel(
-    "Graph - Global",
+    "Graphes",
     shiny::sidebarPanel(
       width = 3,
       shiny::fluidRow(
+        shinyWidgets::prettyRadioButtons(
+          inputId = ns("disagg"),
+          label = "Niveau géographique",
+          choices = c("National", "Départemental"),
+          selected = "National",
+          fill = TRUE,
+          status = "danger")
+      ),
+      shiny::fluidRow(
         shiny::selectInput(
-          inputId = ns("main_rq"),
+          inputId = ns("rq"),
           label = "Secteur",
-          choices = unique(HTI.MSNA.2022::data_main_simple$rq),
+          choices = "EPHA",
           selected = "EPHA")
       ),
       shiny::fluidRow(
         shiny::selectInput(
-          inputId = ns("main_sub_rq"),
+          inputId = ns("sub_rq"),
           label = "Sous-secteur",
-          choices = unique(HTI.MSNA.2022::data_main_simple$sub_rq),
+          choices = "Accès à l'eau",
           selected = "Accès à l'eau")
       ),
       shiny::fluidRow(
         shiny::selectInput(
-          inputId = ns("main_indicator"),
+          inputId = ns("indicator"),
           label = "Indicateur",
-          choices = unique(HTI.MSNA.2022::data_main_simple$indicator),
+          choices = "% de ménages par source d'eau de boisson",
           selected = "% de ménages par source d'eau de boisson")
+      ),
+      shiny::conditionalPanel(
+        condition = "input.disagg == 'Départemental'",
+        ns = ns,
+        shiny::fluidRow(
+          shiny::selectInput(
+            inputId = ns("choice"),
+            label = "Choix de réponse",
+            choices = "Source protégée",
+            selected = "Source protégée")
+        )
       ),
       shiny::fluidRow(
         shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
       )
     ),
     shiny::mainPanel(
-      shiny::h3(shiny::div("Indicateur : ", shiny::textOutput(ns("main_indicator_name")))),
+      shiny::h3(shiny::div("Indicateur : ", shiny::textOutput(ns("indicator_name")))),
       # shiny::h3("Choix : ", shiny::textOutput(ns("main_choices_label"))),
-      shiny::plotOutput(ns("main_graph"))
-      # shiny::dataTableOutput(ns("main_graph")))
+      shiny::plotOutput(ns("graph"))
     )
 
   )
@@ -56,58 +75,132 @@ mod_graph_main_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
-    analysis_admin1_simple <- HTI.MSNA.2022::data_admin1_simple |>
-      dplyr::mutate(stat = ifelse(analysis_name == "Proportion" & analysis != "ratio", round(stat * 100, 0), round(stat, 1)))
 
-    shiny::observeEvent(input$main_rq, {
+    analysis <- reactive({
+      switch(input$disagg,
+             "National" = HTI.MSNA.2022::data_main_simple,
+             "Départemental" = HTI.MSNA.2022::data_admin1_simple)
+    })
+
+
+    shiny::observeEvent(input$rq, {
       shiny::updateSelectInput(session,
-                               "main_sub_rq",
-                               choices = analysis_admin1_simple |>
+                               "sub_rq",
+                               choices = analysis() |>
                                  dplyr::filter(
-                                   rq == input$main_rq
+                                   rq == input$rq
                                  ) |>
                                  dplyr::pull(sub_rq) |>
                                  unique()
       )
     })
 
-    shiny::observeEvent(input$main_sub_rq, {
+    shiny::observeEvent(input$sub_rq, {
       shiny::updateSelectInput(session,
-                               "main_indicator",
-                               choices = analysis_admin1_simple |>
+                               "indicator",
+                               choices = analysis() |>
                                  dplyr::filter(
-                                   rq == input$main_rq,
-                                   sub_rq == input$main_sub_rq
+                                   rq == input$rq,
+                                   sub_rq == input$sub_rq
                                  ) |>
                                  dplyr::pull(indicator) |>
                                  unique()
       )
     })
 
+    shiny::observeEvent(input$indicator, {
+      shiny::updateSelectInput(session,
+                               "choice",
+                               choices = analysis() |>
+                                 dplyr::filter(
+                                   rq == input$rq,
+                                   sub_rq == input$sub_rq,
+                                   indicator == input$indicator
+                                 ) |>
+                                 dplyr::pull(choices_label) |>
+                                 unique()
+      )
+    })
 
-    output$main_indicator_name <- shiny::renderText({
-      analysis_filtered <- analysis_admin1_simple |>
-        dplyr::filter(indicator == input$main_indicator) |>
+
+
+
+    output$indicator_name <- shiny::renderText({
+      analysis_filtered <- analysis() |>
+        dplyr::filter(indicator == input$indicator) |>
         dplyr::pull(indicator) |>
         unique()
     })
 
 
-    output$main_graph <-
-      # shiny::renderDataTable({
-      shiny::renderPlot({
-        analysis_filtered <- analysis_admin1_simple |>
-          dplyr::filter(rq == input$main_rq,
-                        sub_rq == input$main_sub_rq,
-                        indicator == input$main_indicator) |>
+    output$graph <-
+      shiny::renderPlot(
+        height = 700,
+        expr = {
+        analysis_filtered <- analysis() |>
+          dplyr::filter(rq == input$rq,
+                        sub_rq == input$sub_rq,
+                        indicator == input$indicator,
+                        ) |>
           dplyr::mutate(stat = ifelse(is.na(stat), 0, stat)) |>
           dplyr::arrange(dplyr::desc(stat)) |>
-          visualizeR::hbar(x = stat,
-                           y = choices_label,
-                           font_family = "Leelawadee UI",
-                           reverse = TRUE)
+          dplyr::mutate(stat = ifelse(analysis_name == "Proportion" & analysis != "ratio", round(stat * 100, 0), round(stat, 1)))
 
-        analysis_filtered
+       if (input$disagg == "National") {
+
+         if (nrow(analysis_filtered) == 0) {
+           graph <- visualizeR::hbar(
+             .tbl = tibble::tibble(stat = 100, choices_label = "Missing data"),
+             x = stat,
+             y = choices_label,
+             font_size = 16,
+             font_family = "Leelawadee UI",
+             reverse = TRUE)
+         } else {
+
+           graph <- visualizeR::hbar(
+             .tbl = analysis_filtered |>
+               dplyr::mutate(choices_label = factor(choices_label, levels = unique(analysis_filtered$choices_label))),
+             x = stat,
+             y = choices_label,
+             font_family = "Leelawadee UI",
+             font_size = 16,
+             initiative = "reach",
+             pal = "primary",
+             reverse = TRUE,
+             theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 14))
+         }
+
+        } else if (input$disagg == "Départemental") {
+
+          analysis_filtered_dept <- analysis_filtered |>
+            dplyr::filter(choices_label == input$choice)
+
+          if (nrow(analysis_filtered_dept) == 0) {
+            graph <- visualizeR::hbar(
+              .tbl = tibble::tibble(stat = 100, choices_label = "Missing data"),
+              x = stat,
+              y = choices_label,
+              font_size = 16,
+              font_family = "Leelawadee UI",
+              reverse = TRUE)
+          } else {
+
+            graph <- visualizeR::hbar(
+              .tbl = analysis_filtered_dept |>
+                dplyr::mutate(group_disagg_label = factor(group_disagg_label, levels = unique(analysis_filtered_dept$group_disagg_label))),
+                x = stat,
+                y = group_disagg_label,
+                font_family = "Leelawadee UI",
+                font_size = 16,
+                initiative = "reach",
+                pal = "primary",
+                reverse = TRUE,
+                theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 14))
+          }
+        }
+
+        return(graph)
       })
 
   })

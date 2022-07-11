@@ -3,7 +3,7 @@
   background-color:#58585A;
   color: white;
   border-color:#c7c8ca;
-  font-family: "Leelawadee UI";
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
   font-weight: normal;
   font-size:18px;
 }
@@ -12,7 +12,7 @@
   background-color:#58585A;
   color: white;
   border-color:#c7c8ca;
-  font-family: "Leelawadee UI";
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
   font-weight: normal;
   font-size:18px;
 }
@@ -50,14 +50,14 @@
 
 /* markdown "###" title size and font */
 h3 {
-  font-size: 17px;
-  font-family: "Leelawadee UI";
+  font-size: 18px;
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
   font-weight: bold;
 }
 
 .reactable {
-  font-size: 14px;
-  font-family: "Leelawadee UI";
+  font-size: 14x;
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
 }
 
 .tab-panel{
@@ -72,7 +72,7 @@ h3 {
 /* sidebar */
 .sidebar {
   background-color: #58585A;
-  font-family: "Leelawadee UI";
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
   color:white;
   border-color:#c7c8ca;
 }
@@ -80,7 +80,7 @@ h3 {
 /* sidebar */
 .section.sidebar {
   background-color: #58585A;
-  font-family: "Leelawadee UI";
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
   font-size: 16px;
   color:white;
   border-color:#c7c8ca;
@@ -93,14 +93,14 @@ h3 {
   border-color:#EE5859;
   color: white;
   font-size: 16px;
-  font-family: "Leelawadee UI";
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
 }
 
 /* inputs container */
 .shiny-input-container {
   color: white;
   font-size: 16px;
-  font-family: "Leelawadee UI";
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
 }
 
 /* selectize border color */
@@ -115,29 +115,34 @@ h3 {
   outline: 0;
 }
 
+.my-radio {
+	accent-color: #EE5859;
+}
+
 /* selectize dropdown */
 .selectize-dropdown-content .active {
   background: #EE5859 !important;
   color: white !important;
 
+
 /* background borders */
 body hr {
   border-color: white;
   margin: 10px 0;
-  font-family: "Leelawadee UI";
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
 }
 
 /* full background */
 body{
   background: #58585A;
   padding: 60px 0 0 8px; /* padding-top overridden by theme */
-  font-family: "Leelawadee UI";
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
 }
 
 /* paragraph */
 p {
   font-size: 10px;
-  font-family: "Leelawadee UI";
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
   text-align: justify;
   text-justify: inter-word;
 }

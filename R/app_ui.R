@@ -12,13 +12,8 @@ app_ui <- function(request) {
       shiny::navbarPage(
         "HTI - MSNA 2022 - Résultats préliminaires",
         mod_welcome_ui("welcome_1"),
-        # shiny::navbarMenu(
-        #   "Indicateurs",
-        #   menuName = "indicators",
-          mod_indicator_main_ui("indicator_main_1"),
-          mod_indicator_admin1_ui("indicator_admin1_1"),
-          mod_graph_main_ui("graph_main_1"),
-          mod_graph_admin1_ui("graph_admin1_1")
+        mod_indicator_main_ui("indicator_main_1"),
+        mod_graph_main_ui("graph_main_1"),
           # )
         )
     )
