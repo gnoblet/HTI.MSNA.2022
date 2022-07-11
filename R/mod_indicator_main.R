@@ -147,13 +147,19 @@ mod_indicator_main_server <- function(id){
         reactable::reactable(
           class = "reactable",
           rownames = FALSE,
+          defaultPageSize = 50,
           bordered = TRUE,
           # striped = TRUE,
           highlight = TRUE,
           # compact = TRUE,
           filterable = TRUE,
           height = "800px",
-          defaultColDef = colDef(
+          columns = list(
+            "Option de réponse" = reactable::colDef(minWidth = 250, maxWidth = 350)
+          ),
+          defaultColDef = reactable::colDef(
+            vAlign = "center",
+            maxWidth = 150,
             cell = reactablefmtr::color_tiles(
               analysis_filtered,
               colors = c("white","#EE5859"),
