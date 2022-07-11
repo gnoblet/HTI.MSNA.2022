@@ -24,7 +24,7 @@ mod_graph_main_ui <- function(id){
         shiny::selectInput(
           inputId = ns("rq"),
           label = "Secteur",
-          choices = "EPHA",
+          choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
           selected = "EPHA"),
         shiny::selectInput(
           inputId = ns("sub_rq"),
@@ -149,7 +149,13 @@ mod_graph_main_server <- function(id){
                         ) |>
           dplyr::mutate(stat = ifelse(is.na(stat), 0, stat)) |>
           dplyr::arrange(dplyr::desc(stat)) |>
-          dplyr::mutate(stat = ifelse(analysis_name == "Proportion" & analysis != "ratio", round(stat * 100, 0), round(stat, 1)))
+          dplyr::mutate(stat = ifelse(analysis_name == "Proportion" & analysis != "ratio", round(stat * 100, 0), round(stat, 1))) |>
+          dplyr::mutate(choices_label = dplyr::case_when(
+            analysis_name == "Moyenne" ~ "Moyenne",
+            analysis_name == "Médiane" ~ "Médiane",
+            TRUE ~ choices_label)
+          )
+
 
        if (input$disagg == "National") {
 
@@ -160,7 +166,8 @@ mod_graph_main_server <- function(id){
              y = choices_label,
              font_size = 16,
              font_family = "Leelawadee UI",
-             reverse = TRUE)
+             reverse = TRUE,
+             theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 14))
          } else {
 
            graph <- visualizeR::hbar(
@@ -188,7 +195,8 @@ mod_graph_main_server <- function(id){
               y = choices_label,
               font_size = 16,
               font_family = "Leelawadee UI",
-              reverse = TRUE)
+              reverse = TRUE,
+              theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 14))
           } else {
 
             graph <- visualizeR::hbar(

@@ -25,7 +25,7 @@ mod_indicator_main_ui <- function(id){
         shiny::selectInput(
           inputId = ns("rq"),
           label = "Secteur",
-          choices = "EPHA",
+          choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
           selected = "EPHA"),
         shiny::selectInput(
           inputId = ns("sub_rq"),
