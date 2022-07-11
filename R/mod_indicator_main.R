@@ -15,40 +15,30 @@ mod_indicator_main_ui <- function(id){
     "Tableaux",
     shiny::sidebarPanel(
       width = 3,
-      shiny::fluidRow(
         shinyWidgets::prettyRadioButtons(
           inputId = ns("disagg"),
           label = "Niveau géographique",
           choices = c("National", "Départemental"),
           selected = "National",
           fill = TRUE,
-          status = "danger")
-      ),
-      shiny::fluidRow(
+          status = "danger"),
         shiny::selectInput(
           inputId = ns("rq"),
           label = "Secteur",
           choices = "EPHA",
-          selected = "EPHA")
-      ),
-      shiny::fluidRow(
+          selected = "EPHA"),
         shiny::selectInput(
           inputId = ns("sub_rq"),
           label = "Sous-secteur",
           choices = "Accès à l'eau",
-          selected = "Accès à l'eau")
-      ),
-      shiny::fluidRow(
+          selected = "Accès à l'eau"),
         shiny::selectInput(
           inputId = ns("indicator"),
           label = "Indicateur",
           choices = "% de ménages par source d'eau de boisson",
-          selected = "% de ménages par source d'eau de boisson")
-      ),
-      shiny::fluidRow(
+          selected = "% de ménages par source d'eau de boisson"),
         shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
-      )
-    ),
+      ),
     shiny::mainPanel(
       shiny::h3(shiny::textOutput(ns("indicator_name"))),
       reactable::reactableOutput(ns("table")))
