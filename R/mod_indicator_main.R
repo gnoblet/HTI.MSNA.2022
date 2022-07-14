@@ -13,6 +13,8 @@ mod_indicator_main_ui <- function(id){
 
   shiny::tabPanel(
     "Tableaux",
+    icon = shiny::icon("table"),
+    value = "panel_table",
     shiny::sidebarPanel(
       width = 3,
         shinyWidgets::prettyRadioButtons(

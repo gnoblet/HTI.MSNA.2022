@@ -12,6 +12,7 @@ mod_graph_main_ui <- function(id){
 
   shiny::tabPanel(
     "Graphes",
+    icon = shiny::icon("chart-bar"),
     shiny::sidebarPanel(
       width = 3,
         shinyWidgets::prettyRadioButtons(

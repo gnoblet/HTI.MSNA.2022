@@ -11,6 +11,7 @@ mod_welcome_ui <- function(id){
   ns <- NS(id)
 
   shiny::tabPanel("Introduction",
+                  icon = shiny::icon("flag"),
                   shiny::fluidRow(
                     shinydashboard::box(
                       width = 6,
