@@ -46,13 +46,20 @@
 }
 
 
-#controlPanel {background-color: rgba(255,255,255,0.8);}
+.leaflet .legend {
+   line-height: 16px;
+   font-size: 16px;
+}
 
-.leaflet-top.leaflet-right .leaflet-control {
-      margin-right: 210px;
-      margin-bottom: 210px;
+.leaflet .legend i {
+  width: 16px;
+  height: 16px;
   }
 
+.leaflet-hover{
+    width: 300px;
+    white-space: normal;
+}
 
 .outer, .outer2 {
   position: fixed;
@@ -111,6 +118,18 @@ h3 {
   border-color:#EE5859;
   color: white;
   font-size: 16px;
+  opacity: 0.8;
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
+}
+
+/* sidebarpanel background*/
+.well {
+  background-color: #58585A;
+  border-width: 2px;
+  border-color:#EE5859;
+  color: white;
+  font-size: 16px;
+  opacity: 0.8;
   font-family: "Leelawadee UI", "Leelawadee", sans-serif;
 }
 

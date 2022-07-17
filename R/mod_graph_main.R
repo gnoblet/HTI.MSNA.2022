@@ -207,8 +207,6 @@ mod_graph_main_server <- function(id){
                 y = group_disagg_label,
                 font_family = "Leelawadee UI",
                 font_size = 16,
-                initiative = "reach",
-                pal = "primary",
                 reverse = TRUE,
                 theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 14))
           }

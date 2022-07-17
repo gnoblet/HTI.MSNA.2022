@@ -126,7 +126,7 @@ my_selectize_group_server <- function (input, output, session, data, vars)
 
 
 #' @noRd
-label_format <- function (prefix = "", suffix = "", between = " &ndash; ", digits = 3,
+label_format <- function (prefix = "", suffix = "", between = " &ndash; ", digits = 1,
                           big.mark = ",", transform = identity)
 {
   formatNum <- function(x) {
@@ -138,8 +138,13 @@ label_format <- function (prefix = "", suffix = "", between = " &ndash; ", digit
       paste0(prefix, formatNum(cuts), suffix)
     })(...), bin = (function(cuts) {
       n <- length(cuts)
-      paste0(prefix, formatNum(cuts[-n] + 1), between, formatNum(cuts[-1]),
-             suffix)
+      if(max(cuts) <=5) {
+        paste0(prefix, formatNum(cuts[-n]), between, formatNum(cuts[-1]),
+               suffix)
+      } else {
+        paste0(prefix, formatNum(cuts[-n] + 1), between, formatNum(cuts[-1]),
+               suffix)
+      }
     })(...), quantile = (function(cuts, p) {
       n <- length(cuts)
       p <- paste0(round(p * 100), "%")
@@ -154,7 +159,7 @@ label_format <- function (prefix = "", suffix = "", between = " &ndash; ", digit
 
 
 #'@noRd
-leaflet_color_bin <- function(pal = visualizeR::pal_reach("red_alt"), domain, bins = 5, na_color = visualizeR::cols_reach("white"), right = TRUE, reverse = FALSE){
+leaflet_color_bin <- function(pal = visualizeR::pal_reach("red_alt"), domain, bins = 4, na_color = visualizeR::cols_reach("white"), right = TRUE, reverse = FALSE){
   leaflet::colorBin(
     pal,
     domain = domain,
