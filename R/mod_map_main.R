@@ -369,9 +369,6 @@ mod_map_main_server <- function(id){
       })
 
 
-    map_filename <- shiny::reactive({
-
-    })
 
 
     shiny::observeEvent(input$download_map, {
