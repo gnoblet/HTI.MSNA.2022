@@ -15,36 +15,64 @@ mod_indicator_main_ui <- function(id){
     "Tableaux",
     icon = shiny::icon("table"),
     value = "panel_table",
-    shiny::sidebarPanel(
-      width = 3,
-        shinyWidgets::prettyRadioButtons(
-          inputId = ns("disagg"),
-          label = "Niveau géographique",
-          choices = c("National", "Départemental"),
-          selected = "National",
-          fill = TRUE,
-          status = "danger"),
-        shiny::selectInput(
-          inputId = ns("rq"),
-          label = "Secteur",
-          choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
-          selected = "EPHA"),
-        shiny::selectInput(
-          inputId = ns("sub_rq"),
-          label = "Sous-secteur",
-          choices = "Accès à l'eau",
-          selected = "Accès à l'eau"),
-        shiny::selectInput(
-          inputId = ns("indicator"),
-          label = "Indicateur",
-          choices = "% de ménages par source d'eau de boisson",
-          selected = "% de ménages par source d'eau de boisson"),
-        shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
-      ),
-    shiny::mainPanel(
-      shiny::h3(shiny::textOutput(ns("indicator_name"))),
-      reactable::reactableOutput(ns("table")))
-  )
+    div(class="outer",
+
+        shiny::absolutePanel(
+          fixed = TRUE,
+          draggable = FALSE,
+          top = 90,
+          left = 400,
+          right = "auto",
+          width = 1000,
+          shiny::h3(shiny::textOutput(ns("indicator_name"))),
+          reactable::reactableOutput(ns("table")))
+        ),
+    shiny::absolutePanel(
+      fixed = TRUE,
+      draggable = FALSE,
+      top = 90,
+      left = 30,
+      right = "auto",
+      width = 350,
+      class = "well",
+      shinyWidgets::prettyRadioButtons(
+        inputId = ns("disagg"),
+        label = "Niveau géographique",
+        choices = c("National", "Départemental"),
+        selected = "National",
+        fill = TRUE,
+        status = "danger"),
+      shiny::selectInput(
+        inputId = ns("rq"),
+        label = "Secteur",
+        choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
+        selected = "EPHA"),
+      shiny::selectInput(
+        inputId = ns("sub_rq"),
+        label = "Sous-secteur",
+        choices = "Accès à l'eau",
+        selected = "Accès à l'eau"),
+      shiny::selectInput(
+        inputId = ns("indicator"),
+        label = "Indicateur",
+        choices = "% de ménages par source d'eau de boisson",
+        selected = "% de ménages par source d'eau de boisson"),
+      shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
+    ),
+    shiny::absolutePanel(
+      id = "info_box",
+      class = "well",
+      fixed = TRUE,
+      draggable = F,
+      top = 90,
+      left = "auto",
+      right = 30,
+      width = 320,
+      shiny::p(shiny::htmlOutput(ns("infobox"))),
+      shiny::hr(),
+      actionButton(ns("download_table"), icon = shiny::icon("download"), "Télécharger la table")
+    )
+    )
 
 
 
@@ -57,11 +85,21 @@ mod_indicator_main_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
+    #------ Colors
+    white <- visualizeR::cols_reach("white")
+    red_pal <- visualizeR::pal_reach("red_alt", reverse = TRUE)
+    main_red <- visualizeR::cols_reach("main_red")
+    main_grey <- visualizeR::cols_reach("main_grey")
+    main_lt_grey <- visualizeR::cols_reach("main_lt_grey")
+
+
 
     analysis <- reactive({
       switch(input$disagg,
-             "National" = HTI.MSNA.2022::data_main_simple,
-             "Départemental" = HTI.MSNA.2022::data_admin1_simple)
+             "National" = HTI.MSNA.2022::data_main_simple |>
+               dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label)),
+             "Départemental" = HTI.MSNA.2022::data_admin1_simple |>
+               dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label)))
     })
 
 
@@ -105,14 +143,66 @@ mod_indicator_main_server <- function(id){
     })
 
 
+    output$infobox <- shiny::renderUI({
 
+      sector <- input$rq
+      sub_sector <- input$sub_rq
+      indicator <- input$indicator
 
-    output$indicator_name <- shiny::renderText({
-      analysis() |>
-        dplyr::filter(indicator == input$indicator) |>
-        dplyr::pull(indicator) |>
-        unique()
+      analysis_filtered <- analysis() |>
+        dplyr::filter(sector == rq, sub_sector == sub_rq)
+
+      recall <- ifelse(
+        is.na(unique(analysis_filtered$recall)),
+        "Aucune",
+        unique(analysis_filtered$recall)
+      )
+
+      subset <-
+        ifelse(
+          is.na(unique(analysis_filtered$subset)),
+          "Aucun",
+          unique(analysis_filtered$subset)
+        )
+
+      pop_group <- "Population générale"
+
+      shiny::HTML(sprintf("
+                          <span style = 'font-size: 26px; color: %s; font-weight: bold; line-height: 1.2;'> %s </span>
+                          <br>
+                          <span style = 'font-size: 22px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
+                          <br>
+                          <span style = 'font-size: 18px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
+                          <hr>
+                          <span style = 'font-size: 16px; color: %s; font-weight: bold;'> %s </span>
+                          <hr>
+                          <span style = 'font-size: 16px; color: %s;'> <strong> Période de rappel : </strong> %s </span>
+                          <br>
+                          <span style = 'font-size: 16px; color: %s;'> <strong> Sous-ensemble : </strong> %s </span>
+                          ",
+                          main_red,
+                          sector,
+                          main_red,
+                          sub_sector,
+                          white,
+                          pop_group,
+                          white,
+                          indicator,
+                          white,
+                          recall,
+                          white,
+                          subset))
     })
+
+
+
+
+    # output$indicator_name <- shiny::renderText({
+    #   analysis() |>
+    #     dplyr::filter(indicator == input$indicator) |>
+    #     dplyr::pull(indicator) |>
+    #     unique()
+    # })
 
 
     output$table <- reactable::renderReactable({
@@ -124,7 +214,7 @@ mod_indicator_main_server <- function(id){
         ) |>
         dplyr::mutate(stat = ifelse(is.na(stat), 0, stat)) |>
         dplyr::arrange(dplyr::desc(stat)) |>
-        dplyr::mutate(stat = ifelse(analysis_name == "Proportion" & analysis != "ratio", round(stat * 100, 0), round(stat, 1)))
+        dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)))
 
       if (input$disagg == "National") {
 
@@ -172,7 +262,10 @@ mod_indicator_main_server <- function(id){
       return(rctbl)
     })
 
-
+    shiny::observeEvent(input$download_table, {
+      shinyscreenshot::screenshot(id = "table",
+                                  filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator))
+    })
 
 
 })}

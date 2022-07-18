@@ -12,51 +12,80 @@ mod_graph_main_ui <- function(id){
 
   shiny::tabPanel(
     "Graphes",
+    value = "panel-graph",
     icon = shiny::icon("chart-bar"),
-    shiny::sidebarPanel(
-      width = 3,
-        shinyWidgets::prettyRadioButtons(
-          inputId = ns("disagg"),
-          label = "Niveau géographique",
-          choices = c("National", "Départemental"),
-          selected = "National",
-          fill = TRUE,
-          status = "danger"),
-        shiny::selectInput(
-          inputId = ns("rq"),
-          label = "Secteur",
-          choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
-          selected = "EPHA"),
-        shiny::selectInput(
-          inputId = ns("sub_rq"),
-          label = "Sous-secteur",
-          choices = "Accès à l'eau",
-          selected = "Accès à l'eau"),
-        shiny::selectInput(
-          inputId = ns("indicator"),
-          label = "Indicateur",
-          choices = "% de ménages par source d'eau de boisson",
-          selected = "% de ménages par source d'eau de boisson"),
-      shiny::conditionalPanel(
-        condition = "input.disagg == 'Départemental'",
-        ns = ns,
-          shiny::selectInput(
-            inputId = ns("choice"),
-            label = "Choix de réponse",
-            choices = "Source protégée",
-            selected = "Source protégée")
-      ),
-        shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
-    ),
-    shiny::mainPanel(
-      shiny::h3(shiny::textOutput(ns("indicator_name"))),
-      shiny::conditionalPanel(
-        condition = "input.disagg == 'Départemental'",
-        ns = ns,
-        shiny::h3("Choix : ", shiny::textOutput(ns("choice_name")))
+
+    div(class="outer",
+
+        shiny::absolutePanel(
+          fixed = TRUE,
+          draggable = FALSE,
+          top = 90,
+          left = 400,
+          right = "auto",
+          width = 1000,
+          plotly::plotlyOutput(ns("graph"), height = "700px")
         ),
-      shiny::plotOutput(ns("graph"))
+
+        shiny::absolutePanel(
+          fixed = TRUE,
+          draggable = FALSE,
+          top = 90,
+          left = 30,
+          right = "auto",
+          width = 350,
+          class = "well",
+          shinyWidgets::prettyRadioButtons(
+            inputId = ns("disagg"),
+            label = "Niveau géographique",
+            choices = c("National", "Départemental"),
+            selected = "National",
+            fill = TRUE,
+            status = "danger"),
+          shiny::selectInput(
+            inputId = ns("rq"),
+            label = "Secteur",
+            choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
+            selected = "EPHA"),
+          shiny::selectInput(
+            inputId = ns("sub_rq"),
+            label = "Sous-secteur",
+            choices = "Accès à l'eau",
+            selected = "Accès à l'eau"),
+          shiny::selectInput(
+            inputId = ns("indicator"),
+            label = "Indicateur",
+            choices = "% de ménages par source d'eau de boisson",
+            selected = "% de ménages par source d'eau de boisson"),
+          shiny::conditionalPanel(
+            condition = "input.disagg == 'Départemental'",
+            ns = ns,
+            shiny::selectInput(
+              inputId = ns("choice"),
+              label = "Choix de réponse",
+              choices = "Source protégée",
+              selected = "Source protégée")
+        ),
+          shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
+        ),
+
+        shiny::absolutePanel(
+          id = "info_box",
+          class = "well",
+          fixed = TRUE,
+          draggable = F,
+          top = 90,
+          left = "auto",
+          right = 30,
+          width = 320,
+          shiny::p(shiny::htmlOutput(ns("infobox"))),
+          shiny::hr(),
+          actionButton(ns("download_graph"), icon = shiny::icon("download"), "Télécharger le graphique")
+          )
     )
+
+
+
 
   )
 }
@@ -68,11 +97,29 @@ mod_graph_main_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
 
+    #------ Colors
+    white <- visualizeR::cols_reach("white")
+    red_pal <- visualizeR::pal_reach("red_alt", reverse = TRUE)
+    main_red <- visualizeR::cols_reach("main_red")
+    main_grey <- visualizeR::cols_reach("main_grey")
+    main_lt_grey <- visualizeR::cols_reach("main_lt_grey")
+
+    #------ Plotly things
+    # download_button <- list(
+    #   name = "Télécharger le graphique en svg",
+    #   icon = shiny::icon("download"),
+    #   click = htmlwidgets::JS(
+    #     "function(gd) {window.open('http://www.mastercard.com', '_blank')}"
+    #   )
+    # )
+
 
     analysis <- reactive({
       switch(input$disagg,
-             "National" = HTI.MSNA.2022::data_main_simple,
-             "Départemental" = HTI.MSNA.2022::data_admin1_simple)
+             "National" = HTI.MSNA.2022::data_main_simple |>
+               dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label)),
+             "Départemental" = HTI.MSNA.2022::data_admin1_simple |>
+               dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label)))
     })
 
 
@@ -118,42 +165,90 @@ mod_graph_main_server <- function(id){
 
 
 
-    output$indicator_name <- shiny::renderText({
+    output$infobox <- shiny::renderUI({
+
+      sector <- input$rq
+      sub_sector <- input$sub_rq
+      indicator <- input$indicator
+      choice <- input$choice
+
       analysis_filtered <- analysis() |>
-        dplyr::filter(indicator == input$indicator) |>
-        dplyr::pull(indicator) |>
-        unique()
+        dplyr::filter(sector == rq, sub_sector == sub_rq, choices_label == choice)
+
+      recall <- ifelse(
+        is.na(unique(analysis_filtered$recall)),
+        "Aucune",
+        unique(analysis_filtered$recall)
+      )
+
+      subset <-
+        ifelse(
+          is.na(unique(analysis_filtered$subset)),
+          "Aucun",
+          unique(analysis_filtered$subset)
+        )
+
+      pop_group <- "Population générale"
+
+      shiny::HTML(sprintf("
+                          <span style = 'font-size: 26px; color: %s; font-weight: bold; line-height: 1.2;'> %s </span>
+                          <br>
+                          <span style = 'font-size: 22px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
+                          <br>
+                          <span style = 'font-size: 18px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
+                          <hr>
+                          <span style = 'font-size: 16px; color: %s; font-weight: bold;'> %s </span>
+                          <br>
+                          <span style = 'font-size: 16px; color: %s;'> %s </span>
+                          <hr>
+                          <span style = 'font-size: 16px; color: %s;'> <strong> Période de rappel : </strong> %s </span>
+                          <br>
+                          <span style = 'font-size: 16px; color: %s;'> <strong> Sous-ensemble : </strong> %s </span>
+                          ",
+                          main_red,
+                          sector,
+                          main_red,
+                          sub_sector,
+                          white,
+                          pop_group,
+                          white,
+                          indicator,
+                          white,
+                          if (input$disagg == "National") { " "} else if (input$disagg == "Départemental") { choice },
+                          white,
+                          recall,
+                          white,
+                          subset))
     })
-
-
-  output$choice_name <- shiny::renderText({
-    if(!(input$disagg %in% c("National"))) {
-        analysis_filtered <- analysis() |>
-          dplyr::filter(indicator == input$indicator, choices_label == input$choice) |>
-          dplyr::pull(choices_label) |>
-          unique()
-    } else {
-      "Aucun choix sélectionné"
-    }
-    })
-
 
 
     output$graph <-
-      shiny::renderPlot(
-        height = 700,
+      plotly::renderPlotly(
         expr = {
-        analysis_filtered <- analysis() |>
-          dplyr::filter(rq == input$rq,
-                        sub_rq == input$sub_rq,
-                        indicator == input$indicator,
-                        ) |>
+
+        if (input$disagg == "National") {
+          analysis_filtered <- analysis() |>
+            dplyr::filter(rq == input$rq,
+                          sub_rq == input$sub_rq,
+                          indicator == input$indicator
+            )
+        } else {
+          analysis_filtered <- analysis() |>
+            dplyr::filter(rq == input$rq,
+                          sub_rq == input$sub_rq,
+                          indicator == input$indicator,
+                          choices_label == input$choice
+            )
+        }
+
+        analysis_filtered <- analysis_filtered |>
           dplyr::mutate(stat = ifelse(is.na(stat), 0, stat)) |>
           dplyr::arrange(dplyr::desc(stat)) |>
-          dplyr::mutate(stat = ifelse(analysis_name == "Proportion" & analysis != "ratio", round(stat * 100, 0), round(stat, 1))) |>
+          dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
           dplyr::mutate(choices_label = dplyr::case_when(
             analysis_name == "Moyenne" ~ "Moyenne",
             analysis_name == "Médiane" ~ "Médiane",
+            analysis_name == "Proportion" & analysis == "ratio" ~ "Proportion (%)",
             TRUE ~ choices_label)
           )
 
@@ -165,10 +260,8 @@ mod_graph_main_server <- function(id){
              .tbl = tibble::tibble(stat = 100, choices_label = "Missing data"),
              x = stat,
              y = choices_label,
-             font_size = 16,
-             font_family = "Leelawadee UI",
              reverse = TRUE,
-             theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 14))
+             gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 12))
          } else {
 
            graph <- visualizeR::hbar(
@@ -176,44 +269,60 @@ mod_graph_main_server <- function(id){
                dplyr::mutate(choices_label = factor(choices_label, levels = unique(analysis_filtered$choices_label))),
              x = stat,
              y = choices_label,
-             font_family = "Leelawadee UI",
-             font_size = 16,
-             initiative = "reach",
-             pal = "primary",
              reverse = TRUE,
-             theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 14))
+             gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 12)) +
+             ggplot2::scale_y_discrete(labels = scales::label_wrap(50))
          }
 
         } else if (input$disagg == "Départemental") {
 
-          analysis_filtered_dept <- analysis_filtered |>
-            dplyr::filter(choices_label == input$choice)
-
-          if (nrow(analysis_filtered_dept) == 0) {
+          if (nrow(analysis_filtered) == 0) {
             graph <- visualizeR::hbar(
               .tbl = tibble::tibble(stat = 100, choices_label = "Missing data"),
               x = stat,
               y = choices_label,
-              font_size = 16,
-              font_family = "Leelawadee UI",
               reverse = TRUE,
-              theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 14))
+              gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 12))
           } else {
 
             graph <- visualizeR::hbar(
-              .tbl = analysis_filtered_dept |>
-                dplyr::mutate(group_disagg_label = factor(group_disagg_label, levels = unique(analysis_filtered_dept$group_disagg_label))),
+              .tbl = analysis_filtered |>
+                dplyr::mutate(group_disagg_label = factor(group_disagg_label, levels = unique(analysis_filtered$group_disagg_label))),
                 x = stat,
                 y = group_disagg_label,
-                font_family = "Leelawadee UI",
-                font_size = 16,
                 reverse = TRUE,
-                theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 14))
+                gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 12))
           }
         }
 
+        graph <- plotly::ggplotly(graph) |>
+          plotly::layout(
+            xaxis = list(autorange = TRUE, fixedrange = TRUE),
+            yaxis = list(autorange = TRUE, fixedrange = TRUE)
+          ) |>
+          plotly::style(
+            hoverinfo = "none"
+          ) |>
+          plotly::config(
+            displaylogo = FALSE,
+            toImageButtonOptions = list(
+              title = "Télécharger le graphique",
+              format = "svg",
+              # icon = shiny::icon("download"),
+              filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National", paste0( " - ", input$choice), ""), ".svg")),
+            modeBarButtonsToRemove = list("hoverClosestCartesian", "hoverCompareCartesian", "select2d", "lasso2d")
+            # modeBarButtonsToAdd = list(download_button)
+          )
+
         return(graph)
       })
+
+    shiny::observeEvent(input$download_graph, {
+      shinyscreenshot::screenshot(id = "graph",
+                                  filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National", paste0( " - ", input$choice), "")))
+    })
+
+
 
   })
 }

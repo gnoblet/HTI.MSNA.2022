@@ -24,9 +24,11 @@ Imports:
     pins,
     ggblanket,
     visualizeR,
-    tmap,
     leaflet,
-    sf
+    sf,
+    plotly,
+    reactable,
+    shinyscreenshot
 Suggests: 
     spelling,
     testthat (>= 3.0.0)

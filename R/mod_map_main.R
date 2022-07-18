@@ -55,11 +55,13 @@ mod_map_main_ui <- function(id){
         class = "well",
         fixed = TRUE,
         draggable = F,
-        top = 75,
+        top = 90,
         left = "auto",
-        right = 20,
+        right = 30,
         width = 320,
-        shiny::p(shiny::htmlOutput(ns("infobox")))),
+        shiny::p(shiny::htmlOutput(ns("infobox"))),
+        shiny::hr(),
+        actionButton(ns("download_map"), icon = shiny::icon("download"), "Télécharger la carte"))
     )
 
   )
@@ -99,18 +101,8 @@ mod_map_main_server <- function(id){
       lapply(htmltools::HTML)
 
     #------ Other data
-    analysis <- HTI.MSNA.2022::data_admin1_simple
-
-    analysis <- admin1_polygon |>
-      dplyr::left_join(analysis, by = c("admin1" = "group_disagg")) |>
-      dplyr::mutate(
-        stat = ifelse(is.na(stat), 0, stat),
-        choices_label = ifelse(is.na(choices_label), " ", choices_label)
-      ) |>
-      dplyr::mutate(
-        stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)),
-        analysis_name = ifelse(analysis_name == "Proportion", "Proportion (%)", analysis_name)
-        )
+    analysis <- HTI.MSNA.2022::data_admin1_simple |>
+      dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label))
 
 
 # Server : Observe --------------------------------------------------------
@@ -165,67 +157,79 @@ mod_map_main_server <- function(id){
       sector <- input$rq
       sub_sector <- input$sub_rq
       indicator <- input$indicator
-      choice <- ifelse(is.null(input$choice) | is.na(input$choice), " ", input$choice)
+      choice <- input$choice
 
       analysis_filtered <- analysis |>
         dplyr::filter(sector == rq, sub_sector == sub_rq, choices_label == choice)
 
       recall <- ifelse(
         is.na(unique(analysis_filtered$recall)),
-        "",
+        "Aucune",
         unique(analysis_filtered$recall)
       )
 
-      subset <- ifelse(
+      subset <-
+        ifelse(
         is.na(unique(analysis_filtered$subset)),
-        "Calculé sur l'ensemble des ménages",
+        "Aucun",
         unique(analysis_filtered$subset)
         )
 
-      popgroup <- "Population générale"
+      pop_group <- "Population générale"
+
       shiny::HTML(sprintf("
-                          <span style='color: %s; font-size: 26px; line-height: 1.2;'><strong> %s </strong></span>
+                          <span style = 'font-size: 26px; color: %s; font-weight: bold; line-height: 1.2;'> %s </span>
                           <br>
-                          <span style='color: %s; font-size: 22px; line-height: 1.2;'><strong> %s </strong></span>
+                          <span style = 'font-size: 22px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
                           <br>
-                          <span style=' font-size: 18px; color: %s'><strong> %s </span>
+                          <span style = 'font-size: 18px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
                           <hr>
-                          %s </strong>
+                          <span style = 'font-size: 16px; color: %s; font-weight: bold;'> %s </span>
                           <br>
-                          %s <hr>
-                          <span style=' font-size: 16px; color: %s'> <strong> %s </strong> %s </span>
-                          <br><strong> %s </strong> %s
+                          <span style = 'font-size: 16px; color: %s;'> %s </span>
+                          <hr>
+                          <span style = 'font-size: 16px; color: %s;'> <strong> Période de rappel : </strong> %s </span>
+                          <br>
+                          <span style = 'font-size: 16px; color: %s;'> <strong> Sous-ensemble : </strong> %s </span>
                           ",
-                   main_red,
-                   sector,
-                   main_red,
-                   sub_sector,
-                   white,
-                   popgroup,
-                   indicator,
-                   choice,
-                   white,
-                   ifelse(subset == "Calculé sur l'ensemble des ménages", "", "Sous-ensemble : "),
-                   subset,
-                   ifelse(recall == "", "", "Période de rappel : "),
-                   recall,
-                  '<style type="text/css"> .shiny-html-output { font-size: 16px; color:#FFFFFF
-               font-family: Leelawadee UI} </style>'))
+                          main_red,
+                          sector,
+                          main_red,
+                          sub_sector,
+                          white,
+                          pop_group,
+                          white,
+                          indicator,
+                          white,
+                          choice,
+                          white,
+                          recall,
+                          white,
+                          subset))
     })
 
 
 
 # Server : Map ------------------------------------------------------------
 
-
-    output$map <- leaflet::renderLeaflet({
-
+    choice_map <- shiny::reactive({
       analysis_filtered <- analysis |>
         dplyr::filter(rq == input$rq,
                       sub_rq == input$sub_rq,
                       indicator == input$indicator,
                       choices_label == input$choice
         )
+
+      analysis_filtered <- admin1_polygon |>
+        dplyr::left_join(analysis_filtered, by = c("admin1" = "group_disagg")) |>
+        dplyr::mutate(
+          stat = ifelse(is.na(stat), 0, stat)
+        ) |>
+        dplyr::mutate(
+          stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)),
+          analysis_name = ifelse(analysis_name == "Proportion", "Proportion (%)", analysis_name)
+        )
+
 
       #----- Color
 
@@ -235,36 +239,35 @@ mod_map_main_server <- function(id){
       sector <- input$rq
       sub_sector <- input$sub_rq
       indicator <- input$indicator
-      choice <- ifelse(is.null(input$choice) | is.na(input$choice), "", input$choice)
+      choice <- input$choice
 
       #------ Highlight label
       label_admin1 <- sprintf(
-        '<div class="leaflet-hover">
-        <strong><span style="font-size: 18px; color: %s;"> %s </span><br>
-        <span style="font-size: 14px; color: %s;"> %s </span><br></strong>
-        <span style="font-size: 14px; color: %s;"> %s </span><br>
-        <strong><span style="font-size: 14px; color: %s;"> %s </span><br>
-        <span style="font-size: %s; color: %s;"> %s </span></strong>
+        "<div class ='leaflet-hover'>
+        <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
+        <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
+        <span style = 'font-size: 14px; color: %s;'> %s </span><br>
+        <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
+        <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span>
         </div>
-        ',
+        ",
         main_grey,
         analysis_filtered$departemen,
         main_grey,
-        paste0("Indicateur : ", indicator),
+        indicator,
         main_grey,
-        ifelse(choice == "", choice, paste0("Choix : ", choice)),
+        ifelse(choice == " ", "", choice),
         main_lt_grey,
         ifelse(is.na(analysis_filtered$subset),
-                        "Calculé sur l'ensemble des ménages",
-                        paste0("Sous-ensemble : ", analysis_filtered$subset)
-                      ),
-        "18px",
+               "Calculé sur l'ensemble des ménages",
+               paste0("Sous-ensemble : ", analysis_filtered$subset)
+        ),
         main_red,
         ifelse(analysis_filtered$analysis_name == "Proportion (%)",
                paste0(analysis_filtered$stat, "%"),
                analysis_filtered$stat)
-        ) |>
-          lapply(htmltools::HTML)
+      ) |>
+        lapply(htmltools::HTML)
 
 
 
@@ -302,11 +305,11 @@ mod_map_main_server <- function(id){
 
           #------ Highlight
           highlightOptions = leaflet::highlightOptions(fillColor = "main_lt_grey",
-                                              color        = "main_lt_grey",
-                                              weight       = 2,
-                                              opacity      = 0.9,
-                                              fillOpacity  = 0.5,
-                                              bringToFront = F),
+                                                       color        = "main_lt_grey",
+                                                       weight       = 2,
+                                                       opacity      = 0.9,
+                                                       fillOpacity  = 0.5,
+                                                       bringToFront = F),
           labelOptions = leaflet::labelOptions(
             noHide = FALSE,
             noWrap = FALSE,
@@ -358,7 +361,24 @@ mod_map_main_server <- function(id){
           title = unique(na.omit(analysis_filtered$analysis_name))
         ) |>
         leaflet::addScaleBar(position = "bottomleft", leaflet::scaleBarOptions(imperial = FALSE))
+
+    })
+
+    output$map <- leaflet::renderLeaflet({
+      choice_map()
       })
+
+
+    map_filename <- shiny::reactive({
+
+    })
+
+
+    shiny::observeEvent(input$download_map, {
+      shinyscreenshot::screenshot(id = "map",
+                                  filename =  paste0("HTI MSNA 2022 - ", input$indicator, ifelse(input$choice == " ", "", paste0( " - ", input$choice)), ".png"))
+    })
+
 
   })
 }
