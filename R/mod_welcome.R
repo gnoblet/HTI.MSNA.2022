@@ -45,7 +45,7 @@ mod_welcome_ui <- function(id){
                     shiny::p("REACH a effectué la collecte pour les ménages en population générale. L'échantillon était un échantillon stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural soit urbain). Voir carte ci-contre."),
                    shiny::tags$ul(
                       shiny::tags$li("Le questionnaire est disponible :", shiny::tags$a("ici.", href = "https://www.impact-repository.org/document/reach/b2448f66/REACH_HTI_dap_MSNA-2022-1-1.xlsx")),
-                      shiny::tags$li("Pour plus d'informations sur la méthodlogie, les termes de référence sont disponibles", shiny::tags$a("ici.", href = "https://www.impact-repository.org/document/reach/dc728cf9/REACH_HTI_tor_MSNA-2022-1.pdf")))
+                      shiny::tags$li("Pour plus d'informations sur la méthodologie, les termes de référence sont disponibles", shiny::tags$a("ici.", href = "https://www.impact-repository.org/document/reach/dc728cf9/REACH_HTI_tor_MSNA-2022-1.pdf")))
                     )
                 )
   )
