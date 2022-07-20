@@ -100,6 +100,10 @@ mod_map_main_server <- function(id){
     ) |>
       lapply(htmltools::HTML)
 
+    admin0_frontier <- HTI.MSNA.2022::hti_admin0_frontier
+
+    admin0_border <- HTI.MSNA.2022::hti_admin0_border
+
     #------ Other data
     analysis <- HTI.MSNA.2022::data_admin1_simple |>
       dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label))
@@ -292,20 +296,21 @@ mod_map_main_server <- function(id){
         leaflet::addProviderTiles(leaflet::providers$CartoDB.PositronNoLabels,
                                   options = leaflet::providerTileOptions(opacity = 0.5)) |>
 
+
         #------ Polygons
         leaflet::addPolygons(
-          color = white,
+          opacity = 0,
           fillColor = ~fillcol(stat),
-          weight       = 0.2,
+          weight       = 1,
           smoothFactor = 0.5,
-          opacity      = 0.9,
+          # opacity      = 0.9,
           fillOpacity  = 0.9,
           options      = list(zIndex = 400),
           label = label_admin1,
 
           #------ Highlight
-          highlightOptions = leaflet::highlightOptions(fillColor = "main_lt_grey",
-                                                       color        = "main_lt_grey",
+          highlightOptions = leaflet::highlightOptions(fillColor = main_lt_grey,
+                                                       color        = "#c4c4c4",
                                                        weight       = 2,
                                                        opacity      = 0.9,
                                                        fillOpacity  = 0.5,
@@ -325,14 +330,35 @@ mod_map_main_server <- function(id){
           )
         ) |>
 
-        #------ Limites administratives
+        #------ Limites administratives : département
         leaflet::addPolylines(
           data = admin1_line,
-          color = main_lt_grey,
-          weight = 1.3,
+          color = "#c4c4c4",
+          weight = 1.5,
           opacity = 1.0,
           options = list(zIndex = 400)
         ) |>
+
+        #------- Limites administratives : contour
+        leaflet::addPolylines(
+          data = admin0_border,
+          color = "#000000",
+          fillOpacity = 0,
+          weight = 1.5,
+          opacity = 1.0,
+          options = list(zIndex = 400)
+        ) |>
+
+        #------- Limites administratives : frontière
+        leaflet::addPolylines(
+          data = admin0_frontier,
+          color = "#000000",
+          weight = 2,
+          opacity = 1.0,
+          options = list(zIndex = 400)
+        ) |>
+
+
 
         #------ Label Admin 1 :
         leaflet::addLabelOnlyMarkers(
