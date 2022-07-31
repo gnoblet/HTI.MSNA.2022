@@ -122,9 +122,10 @@ mod_graph_main_server <- function(id){
     analysis <- reactive({
       switch(input$disagg,
              "National" = HTI.MSNA.2022::data_main_simple |>
-               dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label)),
+               mutate_if_nulla(choices_label, " "),
              "Départemental" = HTI.MSNA.2022::data_admin1_simple |>
-               dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label)))
+               mutate_if_nulla(choices_label, " ")
+             )
     })
 
 
@@ -226,7 +227,7 @@ mod_graph_main_server <- function(id){
         }
 
         analysis_filtered <- analysis_filtered |>
-          dplyr::mutate(stat = ifelse(is.na(stat), 0, stat)) |>
+          mutate_if_nulla(stat, 0)
           dplyr::arrange(dplyr::desc(stat)) |>
           dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
           dplyr::mutate(choices_label = dplyr::case_when(

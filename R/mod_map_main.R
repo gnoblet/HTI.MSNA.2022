@@ -106,8 +106,7 @@ mod_map_main_server <- function(id){
 
     #------ Other data
     analysis <- HTI.MSNA.2022::data_admin1_simple |>
-      dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label))
-
+      mutate_if_nulla(choices_label, " ")
 
 # Server : Observe --------------------------------------------------------
 
@@ -206,9 +205,7 @@ mod_map_main_server <- function(id){
 
       analysis_filtered <- admin1_polygon |>
         dplyr::left_join(analysis_filtered, by = c("admin1" = "group_disagg")) |>
-        dplyr::mutate(
-          stat = ifelse(is.na(stat), 0, stat)
-        ) |>
+        mutate_if_nulla(stat, 0) |>
         dplyr::mutate(
           stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)),
           analysis_name = ifelse(analysis_name == "Proportion", "Proportion (%)", analysis_name)
