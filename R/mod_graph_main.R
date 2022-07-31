@@ -65,10 +65,8 @@ mod_graph_main_ui <- function(id){
               label = "Choix de réponse",
               choices = "Source protégée",
               selected = "Source protégée")
+            )
         ),
-          shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
-        ),
-
         shiny::absolutePanel(
           id = "info_box",
           class = "well",
@@ -81,12 +79,19 @@ mod_graph_main_ui <- function(id){
           shiny::p(shiny::htmlOutput(ns("infobox"))),
           shiny::hr(),
           actionButton(ns("download_graph"), icon = shiny::icon("download"), "Télécharger le graphique")
-          )
+          ),
+        shiny::absolutePanel(
+          id = "reach-logo",
+          #class = "well",
+          fixed = TRUE,
+          draggable = F,
+          top = 1000,
+          left = "auto",
+          right = 30,
+          width = 350,
+          shiny::img(src = "www/reach_logo.png", width = "80%", align = "right")
+        )
     )
-
-
-
-
   )
 }
 
@@ -190,37 +195,16 @@ mod_graph_main_server <- function(id){
 
       pop_group <- "Population générale"
 
-      shiny::HTML(sprintf("
-                          <span style = 'font-size: 26px; color: %s; font-weight: bold; line-height: 1.2;'> %s </span>
-                          <br>
-                          <span style = 'font-size: 22px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
-                          <br>
-                          <span style = 'font-size: 18px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
-                          <hr>
-                          <span style = 'font-size: 16px; color: %s; font-weight: bold;'> %s </span>
-                          <br>
-                          <span style = 'font-size: 16px; color: %s;'> %s </span>
-                          <hr>
-                          <span style = 'font-size: 16px; color: %s;'> <strong> Période de rappel : </strong> %s </span>
-                          <br>
-                          <span style = 'font-size: 16px; color: %s;'> <strong> Sous-ensemble : </strong> %s </span>
-                          ",
-                          main_red,
-                          sector,
-                          main_red,
-                          sub_sector,
-                          white,
-                          pop_group,
-                          white,
-                          indicator,
-                          white,
-                          if (input$disagg == "National") { " "} else if (input$disagg == "Départemental") { choice },
-                          white,
-                          recall,
-                          white,
-                          subset))
-    })
+      info_box(main_title = sector,
+               sub_title = sub_sector,
+               pop_group = pop_group,
+               indicator = indicator,
+               recall = recall,
+               subset = subset,
+               prefix_recall = "Période de rappel :",
+               prefix_subset = "Sous-ensemble :")
 
+    })
 
     output$graph <-
       plotly::renderPlotly(
@@ -295,24 +279,9 @@ mod_graph_main_server <- function(id){
           }
         }
 
-        graph <- plotly::ggplotly(graph) |>
-          plotly::layout(
-            xaxis = list(autorange = TRUE, fixedrange = TRUE),
-            yaxis = list(autorange = TRUE, fixedrange = TRUE)
-          ) |>
-          plotly::style(
-            hoverinfo = "none"
-          ) |>
-          plotly::config(
-            displaylogo = FALSE,
-            toImageButtonOptions = list(
-              title = "Télécharger le graphique",
-              format = "svg",
-              # icon = shiny::icon("download"),
-              filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National", paste0( " - ", input$choice), ""), ".svg")),
-            modeBarButtonsToRemove = list("hoverClosestCartesian", "hoverCompareCartesian", "select2d", "lasso2d")
-            # modeBarButtonsToAdd = list(download_button)
-          )
+        graph <- ggplot_to_plotly(
+          graph,
+          paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National", paste0( " - ", input$choice), ""), ".svg"))
 
         return(graph)
       })

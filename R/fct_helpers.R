@@ -168,3 +168,140 @@ leaflet_color_bin <- function(pal = visualizeR::pal_reach("red_alt"), domain, bi
     right = TRUE
   )
 }
+
+
+#' @noRd
+info_box <- function(color_main_title = visualizeR::cols_reach("main_red"),
+                     color_sub_title = visualizeR::cols_reach("main_red"),
+                     color_pop_group = visualizeR::cols_reach("white"),
+                     color_indicator = visualizeR::cols_reach("white"),
+                     color_recall = visualizeR::cols_reach("white"),
+                     color_subset = visualizeR::cols_reach("white"),
+                     main_title = NULL,
+                     sub_title = NULL,
+                     pop_group = NULL,
+                     indicator = NULL,
+                     recall = NULL,
+                     subset = NULL,
+                     font_size_main_title = "22px",
+                     font_size_sub_title = "18px",
+                     font_size_pop_group = "14px",
+                     font_size_indicator = "12px",
+                     font_size_recall = "12px",
+                     font_size_subset = "12px",
+                     prefix_main_title = "",
+                     prefix_sub_title = "",
+                     prefix_pop_group = "",
+                     prefix_indicator = "",
+                     prefix_recall = "Période de rappel :",
+                     prefix_subset = "Sous-ensemble :") {
+
+
+  glue_string <- glue::glue(
+                  "<span style = 'font-size: {font_size_main_title}; color: {color_main_title}; font-weight: bold; line-height: 1.2;'> <strong> {prefix_main_title} </strong> {main_title} </span>
+                  <br>
+                  <span style = 'font-size: {font_size_sub_title}; color: {color_sub_title}; font-weight: bold;line-height: 1.2;'> <strong> {prefix_sub_title} </strong> {sub_title} </span>
+                  <br>
+                  <span style = 'font-size: {font_size_pop_group}; color: {color_pop_group}; font-weight: bold;line-height: 1.2;'> <strong> {prefix_pop_group} </strong> {pop_group} </span>
+                  <hr>
+                  <span style = 'font-size: {font_size_indicator}; color: {color_indicator}; font-weight: bold;'> <strong> {prefix_indicator} </strong> {indicator} </span>
+                  <hr>
+                  <span style = 'font-size: {font_size_recall}; color: {color_recall};'> <strong> {prefix_recall} </strong> {recall} </span>
+                  <br>
+                  <span style = 'font-size: {font_size_subset}; color: {color_subset};'> <strong> {prefix_subset} </strong> {subset} </span>
+                  ")
+
+  html_output <-  glue_string |>
+    shiny::HTML()
+
+}
+
+
+#' @noRd
+ggplot_to_plotly <- function(ggplot, filename){
+  plotly_plot <- plotly::ggplotly(ggplot) |>
+    plotly::layout(
+      xaxis = list(autorange = TRUE, fixedrange = TRUE),
+      yaxis = list(autorange = TRUE, fixedrange = TRUE)
+    ) |>
+    plotly::style(
+      hoverinfo = "none"
+    ) |>
+    plotly::config(
+      displaylogo = FALSE,
+      toImageButtonOptions = list(
+        title = "Télécharger le graphique",
+        format = "svg",
+        # icon = shiny::icon("download"),
+        filename = filename),
+      modeBarButtonsToRemove = list("hoverClosestCartesian", "hoverCompareCartesian", "select2d", "lasso2d")
+      # modeBarButtonsToAdd = list(download_button)
+    )
+
+  return(plotly_plot)
+}
+
+#' @noRd
+if_not_in_stop <- function(.tbl, cols, df, arg = NULL){
+  if (is.null(arg)) {
+    msg <- glue::glue("The following column/s is/are missing in `{df}`:")
+  }
+  else {
+    msg <- glue::glue("The following column/s from `{arg}` is/are missing in `{df}`:")
+  }
+  if (!all(cols %in% colnames(.tbl))) {
+    rlang::abort(
+      c("Missing columns",
+        "*" =
+          paste(
+            msg,
+            paste(
+              subvec_not_in(cols, colnames(.tbl)),
+              collapse = ", ")
+          )
+      )
+    )
+  }
+}
+
+#' @noRd
+abort_bad_argument <- function(arg1, must, not = NULL, arg2 = NULL, same = NULL) {
+  msg <- glue::glue("`{arg1}` must {must}")
+  if (!is.null(not)) {
+    not <- typeof(not)
+    msg <- glue::glue("{msg}; not {not}.")
+  }
+
+  if (!is.null(same) & !is.null(arg2)) {
+    same <- typeof(same)
+    msg_i <- glue::glue("`{arg2}` is {same}.")
+  }
+
+  rlang::abort("error_bad_argument",
+               message = c(msg, "i" = msg_i),
+               arg1 = arg1,
+               must = must,
+               not = not,
+               arg2 = arg2,
+               same = same
+  )
+}
+
+#' @noRd
+mutate_if_nulla <- function(.tbl, col, replacement){
+
+  #---- Checks
+
+  # col in .tbl
+  col_name <- rlang::as_name(rlang::enquo(col))
+  if_not_in_stop(.tbl, col_name, ".tbl", "col")
+
+  # replacement type string
+  if (typeof(.tbl[[col_name]]) != typeof(replacement)) {abort_bad_argument("replacement", "be the same type as `col`", not = replacement, arg2 = "col", .tbl[[col_name]])}
+
+  mutated <- .tbl |>
+    dplyr::mutate("{{ col }}" := ifelse(is.na({{ col }}) | is.null({{ col }}), replacement, {{ col }}))
+
+  return(mutated)
+}
+

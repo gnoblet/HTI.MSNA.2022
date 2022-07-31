@@ -13,7 +13,7 @@ mod_map_main_ui <- function(id){
   shiny::tabPanel(
     "Carte",
     value = "panel_map",
-    icon = shiny::icon("map-marker"),
+    icon = shiny::icon("location-dot"),
 
     div(class="outer",
 
@@ -95,7 +95,7 @@ mod_map_main_server <- function(id){
     admin1_centroid <- admin1_line |>
       sf::st_point_on_surface()
 
-    admin1_labels_halo <- sprintf('<strong><span style="font-size: 18px; color: %s">%s</span></strong>',
+    admin1_labels_halo <- sprintf('<strong><span class = "leaflet-admin1"; style="font-size: 18px; color: %s">%s</span></strong>',
       main_grey, admin1_centroid$ADM1_FR
     ) |>
       lapply(htmltools::HTML)
@@ -181,35 +181,15 @@ mod_map_main_server <- function(id){
 
       pop_group <- "Population générale"
 
-      shiny::HTML(sprintf("
-                          <span style = 'font-size: 26px; color: %s; font-weight: bold; line-height: 1.2;'> %s </span>
-                          <br>
-                          <span style = 'font-size: 22px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
-                          <br>
-                          <span style = 'font-size: 18px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
-                          <hr>
-                          <span style = 'font-size: 16px; color: %s; font-weight: bold;'> %s </span>
-                          <br>
-                          <span style = 'font-size: 16px; color: %s;'> %s </span>
-                          <hr>
-                          <span style = 'font-size: 16px; color: %s;'> <strong> Période de rappel : </strong> %s </span>
-                          <br>
-                          <span style = 'font-size: 16px; color: %s;'> <strong> Sous-ensemble : </strong> %s </span>
-                          ",
-                          main_red,
-                          sector,
-                          main_red,
-                          sub_sector,
-                          white,
-                          pop_group,
-                          white,
-                          indicator,
-                          white,
-                          choice,
-                          white,
-                          recall,
-                          white,
-                          subset))
+      info_box(main_title = sector,
+               sub_title = sub_sector,
+               pop_group = pop_group,
+               indicator = indicator,
+               recall = recall,
+               subset = subset,
+               prefix_recall = "Période de rappel :",
+               prefix_subset = "Sous-ensemble :")
+
     })
 
 
@@ -324,7 +304,7 @@ mod_map_main_server <- function(id){
             textOnly = F,
             style = list(
               "padding" = "3px 8px",
-              "font-family" = "Leelawadee UI",
+              "font-family" = "Leelawadee UI, Leelawadee",
               "border-color" = "#EE5859"
             )
           )

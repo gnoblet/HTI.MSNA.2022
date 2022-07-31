@@ -10,7 +10,7 @@ app_ui <- function(request) {
     golem_add_external_resources(),
     # Your application UI logic
       shiny::navbarPage(
-        "HTI - MSNA 2022 - Résultats préliminaires",
+        title ="HTI - MSNA 2022 - Résultats préliminaires",
         # tags$style(
         #   type = "text/css",
         #   ".shiny-output-error { visibility: hidden; }",

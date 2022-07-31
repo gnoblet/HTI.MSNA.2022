@@ -46,7 +46,18 @@ mod_welcome_ui <- function(id){
                    shiny::tags$ul(
                       shiny::tags$li("Le questionnaire est disponible :", shiny::tags$a("ici.", href = "https://www.impact-repository.org/document/reach/b2448f66/REACH_HTI_dap_MSNA-2022-1-1.xlsx")),
                       shiny::tags$li("Pour plus d'informations sur la méthodologie, les termes de référence sont disponibles", shiny::tags$a("ici.", href = "https://www.impact-repository.org/document/reach/dc728cf9/REACH_HTI_tor_MSNA-2022-1.pdf")))
-                    )
+                    ),
+                  shiny::absolutePanel(
+                    id = "reach-logo",
+                    #class = "well",
+                    fixed = TRUE,
+                    draggable = F,
+                    top = 1000,
+                    left = "auto",
+                    right = 30,
+                    width = 350,
+                    shiny::img(src = "www/reach_logo.png", width = "80%", align = "right")
+                  )
                 )
   )
 

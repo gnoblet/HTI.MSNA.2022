@@ -15,62 +15,75 @@ mod_indicator_main_ui <- function(id){
     "Tableaux",
     icon = shiny::icon("table"),
     value = "panel_table",
-    div(class="outer",
-
+    shiny::column(2,
+      shiny::absolutePanel(
+        # fixed = TRUE,
+        # draggable = FALSE,
+        # top = 90,
+        # left = 30,
+        # right = "auto",
+        # width = 350,
+        class = "well",
+        shinyWidgets::prettyRadioButtons(
+          inputId = ns("disagg"),
+          label = "Niveau géographique",
+          choices = c("National", "Départemental"),
+          selected = "National",
+          fill = TRUE,
+          status = "danger"),
+        shiny::selectInput(
+          inputId = ns("rq"),
+          label = "Secteur",
+          choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
+          selected = "EPHA"),
+        shiny::selectInput(
+          inputId = ns("sub_rq"),
+          label = "Sous-secteur",
+          choices = "Accès à l'eau",
+          selected = "Accès à l'eau"),
+        shiny::selectInput(
+          inputId = ns("indicator"),
+          label = "Indicateur",
+          choices = "% de ménages par source d'eau de boisson",
+          selected = "% de ménages par source d'eau de boisson")
+      )
+    ),
+    shiny::column(8,
         shiny::absolutePanel(
           fixed = TRUE,
           draggable = FALSE,
-          top = 90,
-          left = 400,
-          right = "auto",
-          width = 1000,
+          # top = 90,
+          # left = 400,
+          # right = "auto",
+          # width = 1000,
           shiny::h3(shiny::textOutput(ns("indicator_name"))),
-          reactable::reactableOutput(ns("table")))
+          reactable::reactableOutput(ns("table")), class = "reactable")# width = "55%", height = "100%")
         ),
-    shiny::absolutePanel(
-      fixed = TRUE,
-      draggable = FALSE,
-      top = 90,
-      left = 30,
-      right = "auto",
-      width = 350,
-      class = "well",
-      shinyWidgets::prettyRadioButtons(
-        inputId = ns("disagg"),
-        label = "Niveau géographique",
-        choices = c("National", "Départemental"),
-        selected = "National",
-        fill = TRUE,
-        status = "danger"),
-      shiny::selectInput(
-        inputId = ns("rq"),
-        label = "Secteur",
-        choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
-        selected = "EPHA"),
-      shiny::selectInput(
-        inputId = ns("sub_rq"),
-        label = "Sous-secteur",
-        choices = "Accès à l'eau",
-        selected = "Accès à l'eau"),
-      shiny::selectInput(
-        inputId = ns("indicator"),
-        label = "Indicateur",
-        choices = "% de ménages par source d'eau de boisson",
-        selected = "% de ménages par source d'eau de boisson"),
-      shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
+    shiny::column(2,
+      shiny::absolutePanel(
+        id = "info_box",
+        class = "well",
+        # fixed = TRUE,
+        # draggable = F,
+        # top = 600,
+        # left = 30,
+        # right = "auto",
+        # width = 350,
+        shiny::p(shiny::htmlOutput(ns("infobox"))),
+        shiny::hr(),
+        actionButton(ns("download_table"), icon = shiny::icon("download"), "Télécharger la table")
+      )
     ),
     shiny::absolutePanel(
-      id = "info_box",
-      class = "well",
+      id = "reach-logo",
+      #class = "well",
       fixed = TRUE,
       draggable = F,
-      top = 90,
+      top = 1000,
       left = "auto",
       right = 30,
-      width = 320,
-      shiny::p(shiny::htmlOutput(ns("infobox"))),
-      shiny::hr(),
-      actionButton(ns("download_table"), icon = shiny::icon("download"), "Télécharger la table")
+      width = 350,
+      shiny::img(src = "www/reach_logo.png", width = "80%", align = "right")
     )
     )
 
@@ -97,10 +110,20 @@ mod_indicator_main_server <- function(id){
     analysis <- reactive({
       switch(input$disagg,
              "National" = HTI.MSNA.2022::data_main_simple |>
-               dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label)),
+               mutate_if_nulla(choices_label, " ") |>
+               mutate_if_nulla(stat, 0) |>
+               dplyr::arrange(dplyr::desc(stat)) |>
+               dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))),
              "Départemental" = HTI.MSNA.2022::data_admin1_simple |>
-               dplyr::mutate(choices_label = ifelse(is.na(choices_label), " ", choices_label)))
-    })
+                 mutate_if_nulla(choices_label, " ") |>
+                 dplyr::distinct(id_analysis, choices_label, group_disagg_label, .keep_all = T) |>
+                 tidyr::pivot_wider(
+                   id_cols = c(id_analysis, analysis_name, rq, sub_rq, indicator, choices, recall, subset, choices_label),
+                   names_from = group_disagg_label,
+                   values_from = stat) |>
+                 dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(is.na(x), 0, x))) |>
+                 dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(analysis_name == "Proportion", round(x * 100, 0), round(x, 1)))))
+      })
 
 
     shiny::observeEvent(input$rq, {
@@ -150,105 +173,78 @@ mod_indicator_main_server <- function(id){
       indicator <- input$indicator
 
       analysis_filtered <- analysis() |>
-        dplyr::filter(sector == rq, sub_sector == sub_rq)
+        dplyr::filter(sector == rq, sub_sector == sub_rq, indicator == indicator)
 
       recall <- ifelse(
-        is.na(unique(analysis_filtered$recall)),
+        length(unique(na.omit(analysis_filtered$recall))) == 0,
         "Aucune",
-        unique(analysis_filtered$recall)
+        unique(na.omit(analysis_filtered$recall))
       )
 
       subset <-
         ifelse(
-          is.na(unique(analysis_filtered$subset)),
+          length(unique(na.omit(analysis_filtered$subset))) == 0,
           "Aucun",
-          unique(analysis_filtered$subset)
+          unique(na.omit(analysis_filtered$subset))
         )
 
       pop_group <- "Population générale"
 
-      shiny::HTML(sprintf("
-                          <span style = 'font-size: 26px; color: %s; font-weight: bold; line-height: 1.2;'> %s </span>
-                          <br>
-                          <span style = 'font-size: 22px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
-                          <br>
-                          <span style = 'font-size: 18px; color: %s; font-weight: bold;line-height: 1.2;'> %s </span>
-                          <hr>
-                          <span style = 'font-size: 16px; color: %s; font-weight: bold;'> %s </span>
-                          <hr>
-                          <span style = 'font-size: 16px; color: %s;'> <strong> Période de rappel : </strong> %s </span>
-                          <br>
-                          <span style = 'font-size: 16px; color: %s;'> <strong> Sous-ensemble : </strong> %s </span>
-                          ",
-                          main_red,
-                          sector,
-                          main_red,
-                          sub_sector,
-                          white,
-                          pop_group,
-                          white,
-                          indicator,
-                          white,
-                          recall,
-                          white,
-                          subset))
+      info_box(main_title = sector,
+               sub_title = sub_sector,
+               pop_group = pop_group,
+               indicator = indicator,
+               recall = recall,
+               subset = subset,
+               prefix_recall = "Période de rappel :",
+               prefix_subset = "Sous-ensemble :")
+
     })
 
 
 
 
-    # output$indicator_name <- shiny::renderText({
-    #   analysis() |>
-    #     dplyr::filter(indicator == input$indicator) |>
-    #     dplyr::pull(indicator) |>
-    #     unique()
-    # })
-
-
     output$table <- reactable::renderReactable({
+
+      req(input$rq, input$sub_rq, input$indicator)
 
       analysis_filtered <- analysis() |>
         dplyr::filter(rq == input$rq,
                       sub_rq == input$sub_rq,
                       indicator == input$indicator
-        ) |>
-        dplyr::mutate(stat = ifelse(is.na(stat), 0, stat)) |>
-        dplyr::arrange(dplyr::desc(stat)) |>
-        dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)))
+        )
+
+      req(analysis_filtered)
 
       if (input$disagg == "National") {
 
-        rctbl <- analysis_filtered |>
-          dplyr::select(recall, subset, choices_label, "Statistique" = stat)
+        filtered <- analysis_filtered |>
+          dplyr::select(choices_label, "Statistique" = stat)
 
       } else if (input$disagg == "Départemental") {
 
-        rctbl <- analysis_filtered |>
-          tidyr::pivot_wider(
-            id_cols = c(id_analysis, indicator, choices, recall, subset, choices_label),
-            names_from = group_disagg_label,
-            values_from = stat) |>
-          impactR::deselect(id_analysis, choices, indicator)
+        filtered <- analysis_filtered |>
+          impactR::deselect(id_analysis, rq, sub_rq, choices, recall, subset, indicator, analysis_name)
       }
 
-      rctbl <- rctbl |>
-        dplyr::rename("Option de réponse" = choices_label, "Sous-ensemble" = subset, "Période de rappel" = recall) |>
+      rctbl <- filtered |>
+        dplyr::rename("Option de réponse" = choices_label) |>
+        dplyr::mutate(dplyr::across(where(is.character), \(x) ifelse(x == " ", NA_character_, x))) |>
         janitor::remove_empty(which = "cols") |>
-        dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(is.na(x), 0, x))) |>
         as.data.frame() |>
         reactable::reactable(
           class = "reactable",
           rownames = FALSE,
           defaultPageSize = 50,
           bordered = TRUE,
-          # striped = TRUE,
+          striped = TRUE,
           highlight = TRUE,
           # compact = TRUE,
-          filterable = TRUE,
-          height = "800px",
+          #height = "800px",
           columns = list(
             "Option de réponse" = reactable::colDef(minWidth = 250, maxWidth = 350)
           ),
+          style = list(fontSize = "10pt"),
           defaultColDef = reactable::colDef(
             vAlign = "center",
             maxWidth = 150,
