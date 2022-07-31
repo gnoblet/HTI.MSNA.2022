@@ -242,9 +242,9 @@ mod_indicator_main_server <- function(id){
           # compact = TRUE,
           #height = "800px",
           columns = list(
-            "Option de réponse" = reactable::colDef(minWidth = 250, maxWidth = 350)
+            "Option de réponse" = reactable::colDef(minWidth = 150, maxWidth = 350)
           ),
-          style = list(fontSize = "10pt"),
+          style = list(fontSize = "10px"),
           defaultColDef = reactable::colDef(
             vAlign = "center",
             maxWidth = 150,
