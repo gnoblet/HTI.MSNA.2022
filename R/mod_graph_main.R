@@ -227,7 +227,7 @@ mod_graph_main_server <- function(id){
         }
 
         analysis_filtered <- analysis_filtered |>
-          mutate_if_nulla(stat, 0)
+          mutate_if_nulla(stat, 0) |> 
           dplyr::arrange(dplyr::desc(stat)) |>
           dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
           dplyr::mutate(choices_label = dplyr::case_when(
@@ -236,7 +236,7 @@ mod_graph_main_server <- function(id){
             analysis_name == "Proportion" & analysis == "ratio" ~ "Proportion (%)",
             TRUE ~ choices_label)
           )
-
+  
 
        if (input$disagg == "National") {
 
