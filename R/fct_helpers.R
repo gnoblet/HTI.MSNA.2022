@@ -305,3 +305,11 @@ mutate_if_nulla <- function(.tbl, col, replacement){
   return(mutated)
 }
 
+#' @noRd 
+admin1_f <- function(){
+  tibble::tibble(
+    admin1 = c("grand_anse", "sud_est", "sud", "nippes", "ouest", "artibonite", "centre", "nord", "nord_ouest", "nord_est"),
+    admin1_name = c("Grand'Anse", "Sud Est", "Sud", "Nippes", "Ouest", "Artibonite", "Centre", "Nord", "Nord Ouest", "Nord Est"),
+    admin1_upper = c("GRAND'ANSE", "SUD EST", "SUD", "NIPPES", "OUEST", "ARTIBONITE", "CENTRE", "NORD", "NORD OUEST", "NORD EST")
+  )
+ }
