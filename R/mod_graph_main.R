@@ -122,8 +122,8 @@ mod_graph_main_server <- function(id){
     analysis <- reactive({
       switch(input$disagg,
              "National" = HTI.MSNA.2022::data_main_simple |>
-              mutate_if_nulla(choices_label, " ") |> 
-              mutate_if_nulla(stat, 0) |> 
+              mutate_if_nulla(choices_label, " ") |>
+              mutate_if_nulla(stat, 0) |>
               dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
               dplyr::mutate(choices_label = dplyr::case_when(
                 analysis_name == "Moyenne" ~ "Moyenne",
@@ -131,7 +131,7 @@ mod_graph_main_server <- function(id){
                 analysis_name == "Proportion" & analysis == "ratio" ~ "Proportion (%)",
                 TRUE ~ choices_label)),
              "Départemental" = HTI.MSNA.2022::data_admin1_simple |>
-              mutate_if_nulla(choices_label, " ") |> 
+              mutate_if_nulla(choices_label, " ") |>
               dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
               dplyr::mutate(choices_label = dplyr::case_when(
                 analysis_name == "Moyenne" ~ "Moyenne",
@@ -230,30 +230,30 @@ mod_graph_main_server <- function(id){
             dplyr::filter(rq == input$rq,
                           sub_rq == input$sub_rq,
                           indicator == input$indicator
-            ) |> 
-            mutate_if_nulla(stat, 0) |> 
-            dplyr::arrange(dplyr::desc(stat)) 
+            ) |>
+            mutate_if_nulla(stat, 0) |>
+            dplyr::arrange(dplyr::desc(stat))
         } else {
           analysis_filtered <- analysis() |>
             dplyr::filter(rq == input$rq,
                           sub_rq == input$sub_rq,
                           indicator == input$indicator,
                           choices_label == input$choice
-            ) 
+            )
 
-          missing_admin1 <- admin1_f() |> 
-            dplyr::filter(!(admin1 %in% analysis_filtered$group_disagg)) |> 
+          missing_admin1 <- admin1_f() |>
+            dplyr::filter(!(admin1 %in% analysis_filtered$group_disagg)) |>
             dplyr::rename(group_disagg = admin1, group_disagg_label = admin1_name)
 
-          analysis_filtered <- analysis_filtered |> 
-            dplyr::bind_rows(missing_admin1) |> 
-            mutate_if_nulla(stat, 0) |> 
-            dplyr::arrange(dplyr::desc(stat)) 
+          analysis_filtered <- analysis_filtered |>
+            dplyr::bind_rows(missing_admin1) |>
+            mutate_if_nulla(stat, 0) |>
+            dplyr::arrange(dplyr::desc(stat))
 
         }
 
 
-  
+
 
        if (input$disagg == "National") {
 
@@ -263,7 +263,7 @@ mod_graph_main_server <- function(id){
              x = stat,
              y = choices_label,
              reverse = TRUE,
-             gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 12))
+             gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 10))
          } else {
 
            graph <- visualizeR::hbar(
@@ -272,7 +272,7 @@ mod_graph_main_server <- function(id){
              x = stat,
              y = choices_label,
              reverse = TRUE,
-             gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 12)) +
+             gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 10)) +
              ggplot2::scale_y_discrete(labels = scales::label_wrap(50))
          }
 
@@ -284,7 +284,7 @@ mod_graph_main_server <- function(id){
               x = stat,
               y = choices_label,
               reverse = TRUE,
-              gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 12))
+              gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 10))
           } else {
 
             graph <- visualizeR::hbar(
@@ -293,7 +293,7 @@ mod_graph_main_server <- function(id){
                 x = stat,
                 y = group_disagg_label,
                 reverse = TRUE,
-                gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 12))
+                gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 10))
           }
         }
 
