@@ -69,9 +69,9 @@ mod_indicator_main_ui <- function(id){
         # left = 30,
         # right = "auto",
         # width = 350,
-        shiny::p(shiny::htmlOutput(ns("infobox"))),
-        shiny::hr(),
-        actionButton(ns("download_table"), icon = shiny::icon("download"), "Télécharger la table")
+        shiny::p(shiny::htmlOutput(ns("infobox")))#,
+        # shiny::hr(),
+        # actionButton(ns("download_table"), icon = shiny::icon("download"), "Télécharger la table")
       )
     ),
     shiny::absolutePanel(
@@ -258,10 +258,10 @@ mod_indicator_main_server <- function(id){
       return(rctbl)
     })
 
-    shiny::observeEvent(input$download_table, {
-      shinyscreenshot::screenshot(id = "table",
-                                  filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator))
-    })
+    # shiny::observeEvent(input$download_table, {
+    #   shinyscreenshot::screenshot(id = "table",
+    #                               filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator))
+    # })
 
 
 })}
