@@ -221,8 +221,8 @@ info_box <- function(color_main_title = visualizeR::cols_reach("main_red"),
 ggplot_to_plotly <- function(ggplot, filename){
   plotly_plot <- plotly::ggplotly(ggplot) |>
     plotly::layout(
-      xaxis = list(autorange = TRUE, fixedrange = TRUE),
-      yaxis = list(autorange = TRUE, fixedrange = TRUE)
+      xaxis = list(autorange = TRUE, fixedrange = TRUE)#,
+      # yaxis = list(autorange = TRUE, fixedrange = TRUE)
     ) |>
     plotly::style(
       hoverinfo = "none"
@@ -305,7 +305,7 @@ mutate_if_nulla <- function(.tbl, col, replacement){
   return(mutated)
 }
 
-#' @noRd 
+#' @noRd
 admin1_f <- function(){
   tibble::tibble(
     admin1 = c("grand_anse", "sud_est", "sud", "nippes", "ouest", "artibonite", "centre", "nord", "nord_ouest", "nord_est"),
