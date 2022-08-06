@@ -217,6 +217,36 @@ info_box <- function(color_main_title = visualizeR::cols_reach("main_red"),
 }
 
 
+reduced_info_box <- function(
+                     color_pop_group = visualizeR::cols_reach("white"),
+                     color_recall = visualizeR::cols_reach("white"),
+                     color_subset = visualizeR::cols_reach("white"),
+                     pop_group = NULL,
+                     recall = NULL,
+                     subset = NULL,
+                     font_size_pop_group = "14px",
+                     font_size_recall = "12px",
+                     font_size_subset = "12px",
+                     prefix_pop_group = "",
+                     prefix_recall = "Période de rappel :",
+                     prefix_subset = "Sous-ensemble :") {
+
+
+  glue_string <- glue::glue(
+    "
+    <span style = 'font-size: {font_size_pop_group}; color: {color_pop_group}; font-weight: bold;line-height: 1.2;'> <strong> {prefix_pop_group} </strong> {pop_group} </span>
+                  <hr>
+                  <span style = 'font-size: {font_size_recall}; color: {color_recall};'> <strong> {prefix_recall} </strong> {recall} </span>
+                  <br>
+                  <span style = 'font-size: {font_size_subset}; color: {color_subset};'> <strong> {prefix_subset} </strong> {subset} </span>
+                  ")
+
+  html_output <-  glue_string |>
+    shiny::HTML()
+
+}
+
+
 #' @noRd
 ggplot_to_plotly <- function(ggplot, filename){
   plotly_plot <- plotly::ggplotly(ggplot) |>

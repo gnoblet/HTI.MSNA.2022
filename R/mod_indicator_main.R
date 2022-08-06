@@ -15,8 +15,8 @@ mod_indicator_main_ui <- function(id){
     "Tableaux",
     icon = shiny::icon("table"),
     value = "panel_table",
-    shiny::column(2,
-      shiny::absolutePanel(
+    shiny::sidebarPanel(
+      width = 3,
         # fixed = TRUE,
         # draggable = FALSE,
         # top = 90,
@@ -45,35 +45,21 @@ mod_indicator_main_ui <- function(id){
           inputId = ns("indicator"),
           label = "Indicateur",
           choices = "% de ménages par source d'eau de boisson",
-          selected = "% de ménages par source d'eau de boisson")
-      )
+          selected = "% de ménages par source d'eau de boisson"),
+      shiny::hr(),
+        shiny::p(shiny::htmlOutput(ns("infobox")))
     ),
-    shiny::column(8,
-        shiny::absolutePanel(
+    shiny::mainPanel(
           fixed = TRUE,
           draggable = FALSE,
           # top = 90,
           # left = 400,
           # right = "auto",
-          # width = 1000,
-          shiny::h3(shiny::textOutput(ns("indicator_name"))),
-          reactable::reactableOutput(ns("table")), class = "reactable")# width = "55%", height = "100%")
-        ),
-    shiny::column(2,
-      shiny::absolutePanel(
-        id = "info_box",
-        class = "well",
-        # fixed = TRUE,
-        # draggable = F,
-        # top = 600,
-        # left = 30,
-        # right = "auto",
-        # width = 350,
-        shiny::p(shiny::htmlOutput(ns("infobox")))#,
-        # shiny::hr(),
-        # actionButton(ns("download_table"), icon = shiny::icon("download"), "Télécharger la table")
-      )
-    ),
+          width = 9,
+          #shiny::h3(shiny::textOutput(ns("indicator_name"))),
+          reactable::reactableOutput(ns("table"), width = "auto", height = "auto")),
+          # class = "reactable"),
+    # width = "55%", height = "100%"),
     shiny::absolutePanel(
       id = "reach-logo",
       #class = "well",
@@ -190,12 +176,11 @@ mod_indicator_main_server <- function(id){
 
       pop_group <- "Population générale"
 
-      info_box(main_title = sector,
-               sub_title = sub_sector,
+      reduced_info_box(
                pop_group = pop_group,
-               indicator = indicator,
                recall = recall,
                subset = subset,
+               prefix_pop_group = "Groupe de population : ",
                prefix_recall = "Période de rappel :",
                prefix_subset = "Sous-ensemble :")
 
@@ -239,6 +224,7 @@ mod_indicator_main_server <- function(id){
           bordered = TRUE,
           striped = TRUE,
           highlight = TRUE,
+          # width = "900px",
           # compact = TRUE,
           #height = "800px",
           columns = list(
