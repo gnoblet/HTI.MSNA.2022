@@ -88,11 +88,19 @@
 }
 
 
+
+h2 {
+  font-size: 16px;
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
+  font-weight: bold
+}
+
 /* markdown "###" title size and font */
 h3 {
-  font-size: 12px;
+  font-size: 16px;
   font-family: "Leelawadee UI", "Leelawadee", sans-serif;
   font-weight: bold;
+  padding-left: 70px
 }
 
 .reactable {
@@ -205,12 +213,14 @@ p {
 
 /* hyperlink */
 a {
-    color: #EE5859;
+  font-family: bold;
+  color: #EE5859;
 }
 
 /* hyperlink hover */
 a:hover {
-    color: #D2CBB8;
+  font-family: bold;
+  color: #D2CBB8;
 }
 
 

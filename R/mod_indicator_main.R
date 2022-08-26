@@ -27,7 +27,7 @@ mod_indicator_main_ui <- function(id){
         shinyWidgets::prettyRadioButtons(
           inputId = ns("disagg"),
           label = "Niveau géographique",
-          choices = c("National", "Départemental"),
+          choices = c("National", "Départemental", "Milieu", "Départemental et milieu"),
           selected = "National",
           fill = TRUE,
           status = "danger"),
@@ -56,7 +56,7 @@ mod_indicator_main_ui <- function(id){
           # left = 400,
           # right = "auto",
           width = 9,
-          #shiny::h3(shiny::textOutput(ns("indicator_name"))),
+          shiny::h3(shiny::textOutput(ns("indicator_name"))),
           reactable::reactableOutput(ns("table"), width = "auto", height = "auto")),
           # class = "reactable"),
     # width = "55%", height = "100%"),
@@ -95,12 +95,12 @@ mod_indicator_main_server <- function(id){
 
     analysis <- reactive({
       switch(input$disagg,
-             "National" = HTI.MSNA.2022::data_main_simple |>
+             "National" = HTI.MSNA.2022::data_main|>
                mutate_if_nulla(choices_label, " ") |>
                mutate_if_nulla(stat, 0) |>
                dplyr::arrange(dplyr::desc(stat)) |>
                dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))),
-             "Départemental" = HTI.MSNA.2022::data_admin1_simple |>
+             "Départemental" = HTI.MSNA.2022::data_admin1 |>
                  mutate_if_nulla(choices_label, " ") |>
                  dplyr::distinct(id_analysis, choices_label, group_disagg_label, .keep_all = T) |>
                  tidyr::pivot_wider(
@@ -108,7 +108,26 @@ mod_indicator_main_server <- function(id){
                    names_from = group_disagg_label,
                    values_from = stat) |>
                  dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(is.na(x), 0, x))) |>
-                 dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(analysis_name == "Proportion", round(x * 100, 0), round(x, 1)))))
+                 dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(analysis_name == "Proportion", round(x * 100, 0), round(x, 1)))),
+             "Milieu" = HTI.MSNA.2022::data_milieu |>
+               mutate_if_nulla(choices_label, " ") |>
+               dplyr::distinct(id_analysis, choices_label, group_disagg_label, .keep_all = T) |>
+               tidyr::pivot_wider(
+                 id_cols = c(id_analysis, analysis_name, rq, sub_rq, indicator, choices, recall, subset, choices_label),
+                 names_from = group_disagg_label,
+                 values_from = stat) |>
+               dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(is.na(x), 0, x))) |>
+               dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(analysis_name == "Proportion", round(x * 100, 0), round(x, 1)))),
+             "Départemental et milieu" = HTI.MSNA.2022::data_stratum |>
+               mutate_if_nulla(choices_label, " ") |>
+               dplyr::distinct(id_analysis, choices_label, group_disagg_label, .keep_all = T) |>
+               tidyr::pivot_wider(
+                 id_cols = c(id_analysis, analysis_name, rq, sub_rq, indicator, choices, recall, subset, choices_label),
+                 names_from = group_disagg_label,
+                 values_from = stat) |>
+               dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(is.na(x), 0, x))) |>
+               dplyr::mutate(dplyr::across(where(is.numeric), \(x) ifelse(analysis_name == "Proportion", round(x * 100, 0), round(x, 1))))
+             )
       })
 
 
@@ -187,6 +206,11 @@ mod_indicator_main_server <- function(id){
     })
 
 
+    indicator_name <- shiny::reactive({
+      input$indicator
+    })
+
+    output$indicator_name <- shiny::renderText(indicator_name())
 
 
     output$table <- reactable::renderReactable({
@@ -206,7 +230,7 @@ mod_indicator_main_server <- function(id){
         filtered <- analysis_filtered |>
           dplyr::select(choices_label, "Statistique" = stat)
 
-      } else if (input$disagg == "Départemental") {
+      } else if (input$disagg %in% c("Départemental", "Milieu", "Départemental et milieu")) {
 
         filtered <- analysis_filtered |>
           impactR::deselect(id_analysis, rq, sub_rq, choices, recall, subset, indicator, analysis_name)

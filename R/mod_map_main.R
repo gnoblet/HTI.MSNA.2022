@@ -27,6 +27,13 @@ mod_map_main_ui <- function(id){
         right = "auto",
         width = 350,
         class = "well",
+        shinyWidgets::prettyRadioButtons(
+          inputId = ns("disagg"),
+          label = "Niveau géographique",
+          choices = c("Départemental", "Départemental et milieu"),
+          selected = "Départemental",
+          fill = TRUE,
+          status = "danger"),
         shiny::selectInput(
           inputId = ns("rq"),
           label = "Secteur",
@@ -104,9 +111,32 @@ mod_map_main_server <- function(id){
 
     admin0_border <- HTI.MSNA.2022::hti_admin0_border
 
+
+    #------ Spatial stratum
+    stratum <- HTI.MSNA.2022::hti_stratum |>
+      janitor::clean_names() |>
+      dplyr::filter(!(strate %in% c("ouest_urbain", "ouest_rural")))
+
+    stratum_line <- stratum |>
+      sf::st_cast("MULTILINESTRING")
+
     #------ Other data
-    analysis <- HTI.MSNA.2022::data_admin1_simple |>
+    analysis <- HTI.MSNA.2022::data_admin1 |>
       mutate_if_nulla(choices_label, " ")
+
+
+
+
+
+# Server : data -----------------------------------------------------------
+
+    analysis <- reactive({
+      switch(input$disagg,
+             "Départemental" = HTI.MSNA.2022::data_admin1 |>
+               mutate_if_nulla(choices_label, " "),
+             "Départemental et milieu" = HTI.MSNA.2022::data_stratum |>
+               mutate_if_nulla(choices_label, " ")
+      )})
 
 # Server : Observe --------------------------------------------------------
 
@@ -114,7 +144,7 @@ mod_map_main_server <- function(id){
     shiny::observeEvent(input$rq, {
       shiny::updateSelectInput(session,
                                "sub_rq",
-                               choices = analysis |>
+                               choices = analysis() |>
                                  dplyr::filter(
                                    rq == input$rq
                                  ) |>
@@ -126,7 +156,7 @@ mod_map_main_server <- function(id){
     shiny::observeEvent(input$sub_rq, {
       shiny::updateSelectInput(session,
                                "indicator",
-                               choices = analysis |>
+                               choices = analysis() |>
                                  dplyr::filter(
                                    rq == input$rq,
                                    sub_rq == input$sub_rq
@@ -139,7 +169,7 @@ mod_map_main_server <- function(id){
     shiny::observeEvent(input$indicator, {
       shiny::updateSelectInput(session,
                                "choice",
-                               choices = analysis |>
+                               choices = analysis() |>
                                  dplyr::filter(
                                    rq == input$rq,
                                    sub_rq == input$sub_rq,
@@ -162,7 +192,7 @@ mod_map_main_server <- function(id){
       indicator <- input$indicator
       choice <- input$choice
 
-      analysis_filtered <- analysis |>
+      analysis_filtered <- analysis() |>
         dplyr::filter(sector == rq, sub_sector == sub_rq, choices_label == choice)
 
       recall <- ifelse(
@@ -196,20 +226,55 @@ mod_map_main_server <- function(id){
 # Server : Map ------------------------------------------------------------
 
     choice_map <- shiny::reactive({
-      analysis_filtered <- analysis |>
+
+      analysis_filtered <- analysis() |>
         dplyr::filter(rq == input$rq,
                       sub_rq == input$sub_rq,
                       indicator == input$indicator,
                       choices_label == input$choice
         )
 
-      analysis_filtered <- admin1_polygon |>
-        dplyr::left_join(analysis_filtered, by = c("admin1" = "group_disagg")) |>
+
+      missing_admin <- switch(
+        input$disagg,
+        "Départemental" = admin1_f() |>
+          dplyr::filter(!admin1 %in% c("ouest")) |>
+          dplyr::filter(!(admin1 %in% analysis_filtered$group_disagg)) |>
+          dplyr::rename(group_disagg = admin1, group_disagg_label = admin1_name),
+        "Départemental et milieu" = stratum_f() |>
+          dplyr::filter(!stratum %in% c("ouest_urbain", "ouest_rural")) |>
+          dplyr::filter(!(stratum %in% analysis_filtered$group_disagg)) |>
+          dplyr::rename(group_disagg = stratum, group_disagg_label = stratum_name)
+      )
+
+      analysis_filtered <- analysis_filtered |>
+        dplyr::bind_rows(missing_admin) |>
         mutate_if_nulla(stat, 0) |>
-        dplyr::mutate(
-          stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)),
-          analysis_name = ifelse(analysis_name == "Proportion", "Proportion (%)", analysis_name)
-        )
+        dplyr::arrange(dplyr::desc(stat))
+
+
+      analysis_filtered <- switch(
+        input$disagg,
+        "Départemental" = admin1_polygon |>
+          dplyr::left_join(analysis_filtered, by = c("admin1" = "group_disagg")) |>
+          dplyr::mutate(
+            stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)),
+            analysis_name = ifelse(analysis_name == "Proportion", "Proportion (%)", analysis_name)
+          ) |>
+          dplyr::filter(admin1 != "ouest"),
+        "Départemental et milieu" = stratum |>
+          dplyr::left_join(
+            analysis_filtered |> dplyr::mutate(
+              milieu = ifelse(stringr::str_detect(group_disagg, "_urbain"), "Urbain", "Rural"),
+              admin1 = stringr::str_remove_all(group_disagg_label, " -.*")
+            ),
+            by = c("strate" = "group_disagg", "milieu")) |>
+          dplyr::mutate(
+            stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)),
+            analysis_name = ifelse(analysis_name == "Proportion", "Proportion (%)", analysis_name)
+          )
+      ) |>
+        mutate_if_nulla(stat, 0)
 
 
       #----- Color
@@ -223,34 +288,77 @@ mod_map_main_server <- function(id){
       choice <- input$choice
 
       #------ Highlight label
-      label_admin1 <- sprintf(
-        "<div class ='leaflet-hover'>
-        <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
-        <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
-        <span style = 'font-size: 14px; color: %s;'> %s </span><br>
-        <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
-        <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span>
-        </div>
-        ",
-        main_grey,
-        analysis_filtered$departemen,
-        main_grey,
-        indicator,
-        main_grey,
-        ifelse(choice == " ", "", choice),
-        main_lt_grey,
-        ifelse(is.na(analysis_filtered$subset),
-               "Calculé sur l'ensemble des ménages",
-               paste0("Sous-ensemble : ", analysis_filtered$subset)
-        ),
-        main_red,
-        ifelse(analysis_filtered$analysis_name == "Proportion (%)",
-               paste0(analysis_filtered$stat, "%"),
-               analysis_filtered$stat)
-      ) |>
-        lapply(htmltools::HTML)
+      label <- switch(
+        input$disagg,
+        "Départemental" = sprintf(
+            "<div class ='leaflet-hover'>
+            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 14px; color: %s;'> %s </span><br>
+            <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span>
+            </div>
+            ",
+            main_grey,
+            analysis_filtered$departemen,
+            main_grey,
+            indicator,
+            main_grey,
+            ifelse(choice == " ", "", choice),
+            main_lt_grey,
+            ifelse(is.na(analysis_filtered$subset),
+                   "Calculé sur l'ensemble des ménages",
+                   paste0("Sous-ensemble : ", analysis_filtered$subset)
+            ),
+            main_red,
+            ifelse(is.na(analysis_filtered$analysis_name),
+                   "0%",
+                   ifelse(analysis_filtered$analysis_name == "Proportion (%)",
+                     paste0(analysis_filtered$stat, "%"),
+                     analysis_filtered$stat)
+            )
 
+          ) |>
+            lapply(htmltools::HTML),
+        "Départemental et milieu" = sprintf(
+          "<div class ='leaflet-hover'>
+            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 14px; color: %s;'> %s </span><br>
+            <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span>
+            </div>
+            ",
+          main_grey,
+          analysis_filtered$admin1,
+          main_grey,
+          analysis_filtered$milieu,
+          main_grey,
+          indicator,
+          main_grey,
+          ifelse(choice == " ", "", choice),
+          main_lt_grey,
+          ifelse(is.na(analysis_filtered$subset),
+                 "Calculé sur l'ensemble des ménages",
+                 paste0("Sous-ensemble : ", analysis_filtered$subset)
+          ),
+          main_red,
+          ifelse(is.na(analysis_filtered$analysis_name),
+                 "0%",
+                 ifelse(analysis_filtered$analysis_name == "Proportion (%)",
+                        paste0(analysis_filtered$stat, "%"),
+                        analysis_filtered$stat)
+          )
 
+        ) |>
+          lapply(htmltools::HTML)
+      )
+
+      admin_line <- switch(
+        input$disagg,
+        "Départemental" = admin1_line,
+        "Départemental et milieu" = stratum_line)
 
 
       leaflet::leaflet(
@@ -276,17 +384,18 @@ mod_map_main_server <- function(id){
 
         #------ Polygons
         leaflet::addPolygons(
-          opacity = 0,
-          fillColor = ~fillcol(stat),
-          weight       = 1,
+          opacity      = 0,
+          fillColor    = ~fillcol(stat),
+          color        = "#c4c4c4",
+          weight       = 2,
           smoothFactor = 0.5,
           # opacity      = 0.9,
           fillOpacity  = 0.9,
           options      = list(zIndex = 400),
-          label = label_admin1,
+          label = label,
 
           #------ Highlight
-          highlightOptions = leaflet::highlightOptions(fillColor = main_lt_grey,
+          highlightOptions = leaflet::highlightOptions(fillColor    = main_lt_grey,
                                                        color        = "#c4c4c4",
                                                        weight       = 2,
                                                        opacity      = 0.9,
@@ -307,9 +416,9 @@ mod_map_main_server <- function(id){
           )
         ) |>
 
-        #------ Limites administratives : département
+        #------ Limites administratives de strate
         leaflet::addPolylines(
-          data = admin1_line,
+          data = admin_line,
           color = "#c4c4c4",
           weight = 1.5,
           opacity = 1.0,
@@ -334,8 +443,6 @@ mod_map_main_server <- function(id){
           opacity = 1.0,
           options = list(zIndex = 400)
         ) |>
-
-
 
         #------ Label Admin 1 :
         leaflet::addLabelOnlyMarkers(

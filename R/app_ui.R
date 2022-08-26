@@ -19,7 +19,8 @@ app_ui <- function(request) {
         mod_welcome_ui("welcome_1"),
         mod_indicator_main_ui("indicator_main_1"),
         mod_graph_main_ui("graph_main_1"),
-        mod_map_main_ui("map_main_1")
+        mod_map_main_ui("map_main_1"),
+        mod_apropos_ui("apropos_1")
           # )
         )
     )

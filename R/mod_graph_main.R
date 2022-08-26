@@ -24,7 +24,8 @@ mod_graph_main_ui <- function(id){
           left = 400,
           right = "auto",
           width = 1000,
-          plotly::plotlyOutput(ns("graph"), height = "700px")
+          shiny::h3(shiny::textOutput(ns("indicator_name"))),
+          plotly::plotlyOutput(ns("graph"), height = "750px")
         ),
 
         shiny::absolutePanel(
@@ -38,7 +39,7 @@ mod_graph_main_ui <- function(id){
           shinyWidgets::prettyRadioButtons(
             inputId = ns("disagg"),
             label = "Niveau géographique",
-            choices = c("National", "Départemental"),
+            choices = c("National", "Milieu", "Départemental", "Départemental et milieu"),
             selected = "National",
             fill = TRUE,
             status = "danger"),
@@ -58,7 +59,7 @@ mod_graph_main_ui <- function(id){
             choices = "% de ménages par source d'eau de boisson",
             selected = "% de ménages par source d'eau de boisson"),
           shiny::conditionalPanel(
-            condition = "input.disagg == 'Départemental'",
+            condition = "input.disagg == 'Départemental' || input.disagg == 'Départemental et milieu'",
             ns = ns,
             shiny::selectInput(
               inputId = ns("choice"),
@@ -121,7 +122,7 @@ mod_graph_main_server <- function(id){
 
     analysis <- reactive({
       switch(input$disagg,
-             "National" = HTI.MSNA.2022::data_main_simple |>
+             "National" = HTI.MSNA.2022::data_main |>
               mutate_if_nulla(choices_label, " ") |>
               mutate_if_nulla(stat, 0) |>
               dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
@@ -130,7 +131,7 @@ mod_graph_main_server <- function(id){
                 analysis_name == "Médiane" ~ "Médiane",
                 analysis_name == "Proportion" & analysis == "ratio" ~ "Proportion (%)",
                 TRUE ~ choices_label)),
-             "Départemental" = HTI.MSNA.2022::data_admin1_simple |>
+             "Départemental" = HTI.MSNA.2022::data_admin1 |>
               mutate_if_nulla(choices_label, " ") |>
               dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
               dplyr::mutate(choices_label = dplyr::case_when(
@@ -138,7 +139,24 @@ mod_graph_main_server <- function(id){
                 analysis_name == "Médiane" ~ "Médiane",
                 analysis_name == "Proportion" & analysis == "ratio" ~ "Proportion (%)",
                 TRUE ~ choices_label)
-                )
+                ),
+             "Milieu" = HTI.MSNA.2022::data_milieu |>
+               mutate_if_nulla(choices_label, " ") |>
+               dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
+               dplyr::mutate(choices_label = dplyr::case_when(
+                 analysis_name == "Moyenne" ~ "Moyenne",
+                 analysis_name == "Médiane" ~ "Médiane",
+                 analysis_name == "Proportion" & analysis == "ratio" ~ "Proportion (%)",
+                 TRUE ~ choices_label)
+                 ),
+             "Départemental et milieu" = HTI.MSNA.2022::data_stratum |>
+               mutate_if_nulla(choices_label, " ") |>
+               dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
+               dplyr::mutate(choices_label = dplyr::case_when(
+                 analysis_name == "Moyenne" ~ "Moyenne",
+                 analysis_name == "Médiane" ~ "Médiane",
+                 analysis_name == "Proportion" & analysis == "ratio" ~ "Proportion (%)",
+                 TRUE ~ choices_label))
              )
     })
 
@@ -221,6 +239,14 @@ mod_graph_main_server <- function(id){
 
     })
 
+
+    indicator_name <- shiny::reactive({
+      input$indicator
+    })
+
+    output$indicator_name <- shiny::renderText(indicator_name())
+
+
     output$graph <-
       plotly::renderPlotly(
         expr = {
@@ -233,7 +259,7 @@ mod_graph_main_server <- function(id){
             ) |>
             mutate_if_nulla(stat, 0) |>
             dplyr::arrange(dplyr::desc(stat))
-        } else {
+        } else if (input$disagg == "Départemental") {
           analysis_filtered <- analysis() |>
             dplyr::filter(rq == input$rq,
                           sub_rq == input$sub_rq,
@@ -242,6 +268,7 @@ mod_graph_main_server <- function(id){
             )
 
           missing_admin1 <- admin1_f() |>
+            dplyr::filter(!admin1 %in% c("ouest")) |>
             dplyr::filter(!(admin1 %in% analysis_filtered$group_disagg)) |>
             dplyr::rename(group_disagg = admin1, group_disagg_label = admin1_name)
 
@@ -250,51 +277,130 @@ mod_graph_main_server <- function(id){
             mutate_if_nulla(stat, 0) |>
             dplyr::arrange(dplyr::desc(stat))
 
+        } else if (input$disagg == "Milieu") {
+          analysis_filtered <- analysis() |>
+            dplyr::filter(rq == input$rq,
+                          sub_rq == input$sub_rq,
+                          indicator == input$indicator
+            )
+
+          missing_milieu <- milieu_f() |>
+            dplyr::filter(!(milieu %in% analysis_filtered$group_disagg)) |>
+            dplyr::rename(group_disagg = milieu, group_disagg_label = milieu_name)
+
+          analysis_filtered <- analysis_filtered |>
+            dplyr::bind_rows(missing_milieu) |>
+            mutate_if_nulla(stat, 0) |>
+            dplyr::arrange(dplyr::desc(stat))
+
+        } else if (input$disagg == "Départemental et milieu") {
+          analysis_filtered <- analysis() |>
+            dplyr::filter(rq == input$rq,
+                          sub_rq == input$sub_rq,
+                          indicator == input$indicator,
+                          choices_label == input$choice
+            )
+
+          missing_stratum <- stratum_f() |>
+            dplyr::filter(!stratum %in% c("ouest_urbain", "ouest_rural")) |>
+            dplyr::filter(!(stratum %in% analysis_filtered$group_disagg)) |>
+            dplyr::rename(group_disagg = stratum, group_disagg_label = stratum_name)
+
+          analysis_filtered <- analysis_filtered |>
+            dplyr::bind_rows(missing_stratum) |>
+            mutate_if_nulla(stat, 0) |>
+            dplyr::arrange(dplyr::desc(stat)) |>
+            dplyr::mutate(
+              milieu = ifelse(stringr::str_detect(group_disagg, "_urbain"), "Urbain", "Rural"),
+              admin1 = stringr::str_remove_all(group_disagg_label, " -.*"))
+
         }
 
 
+        if (nrow(analysis_filtered) == 0) {
+          graph <- visualizeR::hbar(
+            .tbl = tibble::tibble(stat = 100, choices_label = "Missing data"),
+            x = stat,
+            y = choices_label,
+            reverse = TRUE,
+            gg_theme = ggblanket::gg_theme(
+              font = "Leelawadee UI",
+              body_size = 10,
+              bg_plot_pal = "#FFFFFF",
+              bg_panel_pal = "#FFFFFF",
+              grid_v = TRUE))
+
+        } else {
+
+          if (input$disagg == "National") {
 
 
-       if (input$disagg == "National") {
-
-         if (nrow(analysis_filtered) == 0) {
-           graph <- visualizeR::hbar(
-             .tbl = tibble::tibble(stat = 100, choices_label = "Missing data"),
-             x = stat,
-             y = choices_label,
-             reverse = TRUE,
-             gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 10))
-         } else {
-
-           graph <- visualizeR::hbar(
-             .tbl = analysis_filtered |>
-               dplyr::mutate(choices_label = factor(choices_label, levels = unique(analysis_filtered$choices_label))),
-             x = stat,
-             y = choices_label,
-             reverse = TRUE,
-             gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 10)) +
-             ggplot2::scale_y_discrete(labels = scales::label_wrap(50))
-         }
-
-        } else if (input$disagg == "Départemental") {
-
-          if (nrow(analysis_filtered) == 0) {
             graph <- visualizeR::hbar(
-              .tbl = tibble::tibble(stat = 100, choices_label = "Missing data"),
+              .tbl = analysis_filtered |>
+                dplyr::mutate(choices_label = factor(choices_label, levels = unique(analysis_filtered$choices_label))),
               x = stat,
               y = choices_label,
               reverse = TRUE,
-              gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 10))
-          } else {
+              gg_theme = ggblanket::gg_theme(
+                font = "Leelawadee UI",
+                body_size = 10,
+                bg_plot_pal = "#FFFFFF",
+                bg_panel_pal = "#FFFFFF",
+                grid_v = TRUE)) +
+              ggplot2::scale_y_discrete(labels = scales::label_wrap(70))
+
+          } else if (input$disagg == "Départemental") {
 
             graph <- visualizeR::hbar(
               .tbl = analysis_filtered |>
                 dplyr::mutate(group_disagg_label = factor(group_disagg_label, levels = unique(analysis_filtered$group_disagg_label))),
-                x = stat,
-                y = group_disagg_label,
-                reverse = TRUE,
-                gg_theme = ggblanket::gg_theme(font = "Leelawadee UI", size_body = 10))
+              x = stat,
+              y = group_disagg_label,
+              reverse = TRUE,
+              gg_theme = ggblanket::gg_theme(
+                font = "Leelawadee UI",
+                body_size = 10,
+                bg_plot_pal = "#FFFFFF",
+                bg_panel_pal = "#FFFFFF",
+                grid_v = TRUE))
+
+          } else if (input$disagg == "Milieu") {
+
+            graph <- visualizeR::hbar(
+              .tbl = analysis_filtered |>
+                dplyr::mutate(choices_label = factor(choices_label, levels = unique(analysis_filtered$choices_label))),
+              x = stat,
+              y = choices_label,
+              group = group_disagg_label,
+              group_title = "Milieu",
+              reverse = TRUE,
+              gg_theme = ggblanket::gg_theme(
+                font = "Leelawadee UI",
+                body_size = 10,
+                bg_plot_pal = "#FFFFFF",
+                bg_panel_pal = "#FFFFFF",
+                grid_v = TRUE)) +
+              ggplot2::scale_y_discrete(labels = scales::label_wrap(70))
+
+          } else if (input$disagg == "Départemental et milieu") {
+
+            graph <- visualizeR::hbar(
+              .tbl = analysis_filtered |>
+                dplyr::mutate(admin1 = factor(admin1, levels = unique(analysis_filtered$admin1))),
+              x = stat,
+              y = admin1,
+              group = milieu,
+              group_title = "Milieu",
+              reverse = TRUE,
+              gg_theme = ggblanket::gg_theme(
+                font = "Leelawadee UI",
+                body_size = 10,
+                bg_plot_pal = "#FFFFFF",
+                bg_panel_pal = "#FFFFFF",
+                grid_v = TRUE))
+
           }
+
         }
 
         graph <- ggplot_to_plotly(

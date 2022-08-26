@@ -134,18 +134,23 @@ label_format <- function (prefix = "", suffix = "", between = " &ndash; ", digit
            big.mark = big.mark)
   }
   function(type, ...) {
-    switch(type, numeric = (function(cuts) {
+    switch(type,
+    numeric = (function(cuts) {
       paste0(prefix, formatNum(cuts), suffix)
-    })(...), bin = (function(cuts) {
+    })(...),
+    bin = (function(cuts) {
       n <- length(cuts)
       if(max(cuts) <=5) {
-        paste0(prefix, formatNum(cuts[-n]), between, formatNum(cuts[-1]),
+
+        paste0(prefix, formatNum(cuts[-n] + 0.1), between, formatNum(cuts[-1]),
                suffix)
       } else {
+
         paste0(prefix, formatNum(cuts[-n] + 1), between, formatNum(cuts[-1]),
                suffix)
       }
-    })(...), quantile = (function(cuts, p) {
+    })(...),
+    quantile = (function(cuts, p) {
       n <- length(cuts)
       p <- paste0(round(p * 100), "%")
       cuts <- paste0(formatNum(cuts[-n] + 1), between, formatNum(cuts[-1]))
@@ -166,6 +171,15 @@ leaflet_color_bin <- function(pal = visualizeR::pal_reach("red_alt"), domain, bi
     bins = bins,
     na.color = na_color,
     right = TRUE
+  )
+}
+
+#'@noRd
+leaflet_color_factor <- function(pal = visualizeR::pal_reach("main"), domain, na_color = visualizeR::cols_reach("white"), reverse = FALSE){
+  leaflet::colorFactor(
+    pal,
+    domain = domain,
+    na.color = na_color
   )
 }
 
@@ -343,3 +357,24 @@ admin1_f <- function(){
     admin1_upper = c("GRAND'ANSE", "SUD EST", "SUD", "NIPPES", "OUEST", "ARTIBONITE", "CENTRE", "NORD", "NORD OUEST", "NORD EST")
   )
  }
+
+#' @noRd
+milieu_f <- function(){
+  tibble::tibble(
+    milieu = c("rural", "urbain"),
+    milieu_name = c("Rural", "Urbain"),
+    milieu_upper = c("RURAL", "URBAIN")
+  )
+}
+
+#' @noRd
+stratum_f <- function(){
+  tibble::tibble(
+    stratum = c("grande_anse_rural", "sud_est_rural", "sud_rural", "nippes_rural", "ouest_rural", "artibonite_rural", "centre_rural", "nord_rural", "nord_ouest_rural", "nord_est_rural",
+                "grande_anse_urbain", "sud_est_urbain", "sud_urbain", "nippes_urbain", "ouest_urbain", "artibonite_urbain", "centre_urbain", "nord_urbain", "nord_ouest_urbain", "nord_est_urbain"),
+    stratum_name = c("Grand'Anse - Rural", "Sud Est - Rural", "Sud - Rural", "Nippes - Rural", "Ouest - Rural", "Artibonite - Rural", "Centre - Rural", "Nord - Rural", "Nord Ouest - Rural", "Nord Est - Rural",
+                     "Grand'Anse - Urbain", "Sud Est - Urbain", "Sud - Urbain", "Nippes - Urbain", "Ouest - Urbain", "Artibonite - Urbain", "Centre - Urbain", "Nord - Urbain", "Nord Ouest - Urbain", "Nord Est - Urbain"),
+    stratum_upper = c("GRAND'ANSE - RURAL", "SUD EST - RURAL", "SUD - RURAL", "NIPPES - RURAL", "OUEST - RURAL", "ARTIBONITE - RURAL", "CENTRE - RURAL", "NORD - RURAL", "NORD OUEST - RURAL", "NORD EST - RURAL",
+                      "GRAND'ANSE - URBAIN", "SUD EST - URBAIN", "SUD - URBAIN", "NIPPES - URBAIN", "OUEST - URBAIN", "ARTIBONITE - URBAIN", "CENTRE - URBAIN", "NORD - URBAIN", "NORD OUEST - URBAIN", "NORD EST - URBAIN")
+  )
+}
