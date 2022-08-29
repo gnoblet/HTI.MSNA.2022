@@ -14,8 +14,8 @@ The goal of HTI.MSNA.2022 is to provide some basic Shiny app made with
 
 It stores the R Shiny app made for the Multi Sector Needs Assessment
 (MSNA) 2022 facilitated by REACH Initiative in Haiti, with the primary
-goal of helping the humanitarian community to visualize raw results to
-information the HPC 2023 (HNO and HRP).
+goal of helping the humanitarian community to visualize early results to
+inform the HPC 2023 (HNO and HRP).
 
 ## Installation
 
