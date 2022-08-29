@@ -104,7 +104,7 @@ h3 {
 }
 
 .reactable {
-  font-size: 10px;
+  font-size: 11px;
   font-family: "Leelawadee UI", "Leelawadee", sans-serif;
   max-width: 100%;
   box-sizing: border-box;
@@ -137,6 +137,12 @@ h3 {
   border-color:#c7c8ca;
 }
 
+.fluid-row-padding {
+  padding-left: 30px;
+  padding-right: 20px;
+}
+
+
 /* sidebarpanel background*/
 .well {
   background-color: #58585A;
@@ -145,18 +151,19 @@ h3 {
   color: white;
   font-size: 12px;
   opacity: 0.8;
+  text-align: justify;
   font-family: "Leelawadee UI", "Leelawadee", sans-serif;
 }
 
-/* sidebarpanel background*/
-.well {
-  background-color: #58585A;
-  border-width: 2px;
-  border-color:#EE5859;
-  color: white;
-  font-size: 14px;
-  opacity: 0.8;
-  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
+/* hyperlink */
+.well li a {
+  font-family: bold;
+  color: #EE5859;
+}
+
+.well li a {
+  font-family: bold;
+  color: #EE5859;
 }
 
 /* inputs container */
@@ -211,11 +218,6 @@ p {
 }
 
 
-/* hyperlink */
-a {
-  font-family: bold;
-  color: #EE5859;
-}
 
 /* hyperlink hover */
 a:hover {
@@ -223,7 +225,11 @@ a:hover {
   color: #D2CBB8;
 }
 
-
+/* hyperlink hover */
+.a:hover {
+  font-family: bold;
+  color: #D2CBB8;
+}
 
 
 

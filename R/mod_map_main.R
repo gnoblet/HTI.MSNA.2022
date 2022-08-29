@@ -7,18 +7,16 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
-mod_map_main_ui <- function(id){
+mod_map_main_ui <- function(id) {
   ns <- NS(id)
 
   shiny::tabPanel(
     "Carte",
     value = "panel_map",
     icon = shiny::icon("location-dot"),
-
-    div(class="outer",
-
+    div(
+      class = "outer",
       leaflet::leafletOutput(ns("map"), height = "100%"),
-
       shiny::absolutePanel(
         fixed = TRUE,
         draggable = FALSE,
@@ -33,30 +31,34 @@ mod_map_main_ui <- function(id){
           choices = c("Départemental", "Départemental et milieu"),
           selected = "Départemental",
           fill = TRUE,
-          status = "danger"),
+          status = "danger"
+        ),
         shiny::selectInput(
           inputId = ns("rq"),
           label = "Secteur",
           choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
-          selected = "EPHA"),
+          selected = "EPHA"
+        ),
         shiny::selectInput(
           inputId = ns("sub_rq"),
           label = "Sous-secteur",
           choices = "Accès à l'eau",
-          selected = "Accès à l'eau"),
+          selected = "Accès à l'eau"
+        ),
         shiny::selectInput(
           inputId = ns("indicator"),
           label = "Indicateur",
           choices = "% de ménages par source d'eau de boisson",
-          selected = "% de ménages par source d'eau de boisson"),
+          selected = "% de ménages par source d'eau de boisson"
+        ),
         shiny::selectInput(
-            inputId = ns("choice"),
-            label = "Choix de réponse",
-            choices = "Source protégée",
-            selected = "Source protégée"),
-        shiny::img(src = "www/reach_logo.png", width = "80%", align = "center")
-      ) ,
-
+          inputId = ns("choice"),
+          label = "Choix de réponse",
+          choices = "Source protégée",
+          selected = "Source protégée"
+        ),
+        shiny::img(src = "www/reach_logo.png", width = "60%", align = "left")
+      ),
       shiny::absolutePanel(
         id = "info_box",
         class = "well",
@@ -68,22 +70,21 @@ mod_map_main_ui <- function(id){
         width = 320,
         shiny::p(shiny::htmlOutput(ns("infobox"))),
         shiny::hr(),
-        actionButton(ns("download_map"), icon = shiny::icon("download"), "Télécharger la carte"))
+        actionButton(ns("download_map"), icon = shiny::icon("download"), "Télécharger la carte")
+      )
     )
-
   )
 }
 
 #' map_main Server Functions
 #'
 #' @noRd
-mod_map_main_server <- function(id){
-  moduleServer( id, function(input, output, session){
+mod_map_main_server <- function(id) {
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
 
-
-# Server : global variables -----------------------------------------------
+    # Server : global variables -----------------------------------------------
 
     #------ Colors
     white <- visualizeR::cols_reach("white")
@@ -102,7 +103,8 @@ mod_map_main_server <- function(id){
     admin1_centroid <- admin1_line |>
       sf::st_point_on_surface()
 
-    admin1_labels_halo <- sprintf('<strong><span class = "leaflet-admin1"; style="font-size: 18px; color: %s">%s</span></strong>',
+    admin1_labels_halo <- sprintf(
+      '<strong><span class = "leaflet-admin1"; style="font-size: 18px; color: %s">%s</span></strong>',
       main_grey, admin1_centroid$ADM1_FR
     ) |>
       lapply(htmltools::HTML)
@@ -125,68 +127,63 @@ mod_map_main_server <- function(id){
       mutate_if_nulla(choices_label, " ")
 
 
-
-
-
-# Server : data -----------------------------------------------------------
+    # Server : data -----------------------------------------------------------
 
     analysis <- reactive({
       switch(input$disagg,
-             "Départemental" = HTI.MSNA.2022::data_admin1 |>
-               mutate_if_nulla(choices_label, " "),
-             "Départemental et milieu" = HTI.MSNA.2022::data_stratum |>
-               mutate_if_nulla(choices_label, " ")
-      )})
+        "Départemental" = HTI.MSNA.2022::data_admin1 |>
+          mutate_if_nulla(choices_label, " "),
+        "Départemental et milieu" = HTI.MSNA.2022::data_stratum |>
+          mutate_if_nulla(choices_label, " ")
+      )
+    })
 
-# Server : Observe --------------------------------------------------------
+    # Server : Observe --------------------------------------------------------
 
 
     shiny::observeEvent(input$rq, {
       shiny::updateSelectInput(session,
-                               "sub_rq",
-                               choices = analysis() |>
-                                 dplyr::filter(
-                                   rq == input$rq
-                                 ) |>
-                                 dplyr::pull(sub_rq) |>
-                                 unique()
+        "sub_rq",
+        choices = analysis() |>
+          dplyr::filter(
+            rq == input$rq
+          ) |>
+          dplyr::pull(sub_rq) |>
+          unique()
       )
     })
 
     shiny::observeEvent(input$sub_rq, {
       shiny::updateSelectInput(session,
-                               "indicator",
-                               choices = analysis() |>
-                                 dplyr::filter(
-                                   rq == input$rq,
-                                   sub_rq == input$sub_rq
-                                   ) |>
-                                 dplyr::pull(indicator) |>
-                                 unique()
+        "indicator",
+        choices = analysis() |>
+          dplyr::filter(
+            rq == input$rq,
+            sub_rq == input$sub_rq
+          ) |>
+          dplyr::pull(indicator) |>
+          unique()
       )
     })
 
     shiny::observeEvent(input$indicator, {
       shiny::updateSelectInput(session,
-                               "choice",
-                               choices = analysis() |>
-                                 dplyr::filter(
-                                   rq == input$rq,
-                                   sub_rq == input$sub_rq,
-                                   indicator == input$indicator
-                                   ) |>
-                                 dplyr::pull(choices_label) |>
-                                 unique()
-        )
+        "choice",
+        choices = analysis() |>
+          dplyr::filter(
+            rq == input$rq,
+            sub_rq == input$sub_rq,
+            indicator == input$indicator
+          ) |>
+          dplyr::pull(choices_label) |>
+          unique()
+      )
     })
 
 
-
-
-# Server : Infobox --------------------------------------------------------
+    # Server : Infobox --------------------------------------------------------
 
     output$infobox <- shiny::renderUI({
-
       sector <- input$rq
       sub_sector <- input$sub_rq
       indicator <- input$indicator
@@ -203,40 +200,39 @@ mod_map_main_server <- function(id){
 
       subset <-
         ifelse(
-        is.na(unique(analysis_filtered$subset)),
-        "Aucun",
-        unique(analysis_filtered$subset)
+          is.na(unique(analysis_filtered$subset)),
+          "Aucun",
+          unique(analysis_filtered$subset)
         )
 
       pop_group <- "Population générale"
 
-      info_box(main_title = sector,
-               sub_title = sub_sector,
-               pop_group = pop_group,
-               indicator = indicator,
-               recall = recall,
-               subset = subset,
-               prefix_recall = "Période de rappel :",
-               prefix_subset = "Sous-ensemble :")
-
+      info_box(
+        main_title = sector,
+        sub_title = sub_sector,
+        pop_group = pop_group,
+        indicator = indicator,
+        recall = recall,
+        subset = subset,
+        prefix_recall = "Période de rappel :",
+        prefix_subset = "Sous-ensemble :"
+      )
     })
 
 
 
-# Server : Map ------------------------------------------------------------
+    # Server : Map ------------------------------------------------------------
 
     choice_map <- shiny::reactive({
-
       analysis_filtered <- analysis() |>
-        dplyr::filter(rq == input$rq,
-                      sub_rq == input$sub_rq,
-                      indicator == input$indicator,
-                      choices_label == input$choice
+        dplyr::filter(
+          rq == input$rq,
+          sub_rq == input$sub_rq,
+          indicator == input$indicator,
+          choices_label == input$choice
         )
 
-
-      missing_admin <- switch(
-        input$disagg,
+      missing_admin <- switch(input$disagg,
         "Départemental" = admin1_f() |>
           dplyr::filter(!admin1 %in% c("ouest")) |>
           dplyr::filter(!(admin1 %in% analysis_filtered$group_disagg)) |>
@@ -253,8 +249,7 @@ mod_map_main_server <- function(id){
         dplyr::arrange(dplyr::desc(stat))
 
 
-      analysis_filtered <- switch(
-        input$disagg,
+      analysis_filtered <- switch(input$disagg,
         "Départemental" = admin1_polygon |>
           dplyr::left_join(analysis_filtered, by = c("admin1" = "group_disagg")) |>
           dplyr::mutate(
@@ -268,7 +263,8 @@ mod_map_main_server <- function(id){
               milieu = ifelse(stringr::str_detect(group_disagg, "_urbain"), "Urbain", "Rural"),
               admin1 = stringr::str_remove_all(group_disagg_label, " -.*")
             ),
-            by = c("strate" = "group_disagg", "milieu")) |>
+            by = c("strate" = "group_disagg", "milieu")
+          ) |>
           dplyr::mutate(
             stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)),
             analysis_name = ifelse(analysis_name == "Proportion", "Proportion (%)", analysis_name)
@@ -288,10 +284,9 @@ mod_map_main_server <- function(id){
       choice <- input$choice
 
       #------ Highlight label
-      label <- switch(
-        input$disagg,
+      label <- switch(input$disagg,
         "Départemental" = sprintf(
-            "<div class ='leaflet-hover'>
+          "<div class ='leaflet-hover'>
             <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
             <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
             <span style = 'font-size: 14px; color: %s;'> %s </span><br>
@@ -299,27 +294,27 @@ mod_map_main_server <- function(id){
             <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span>
             </div>
             ",
-            main_grey,
-            analysis_filtered$departemen,
-            main_grey,
-            indicator,
-            main_grey,
-            ifelse(choice == " ", "", choice),
-            main_lt_grey,
-            ifelse(is.na(analysis_filtered$subset),
-                   "Calculé sur l'ensemble des ménages",
-                   paste0("Sous-ensemble : ", analysis_filtered$subset)
-            ),
-            main_red,
-            ifelse(is.na(analysis_filtered$analysis_name),
-                   "0%",
-                   ifelse(analysis_filtered$analysis_name == "Proportion (%)",
-                     paste0(analysis_filtered$stat, "%"),
-                     analysis_filtered$stat)
+          main_grey,
+          analysis_filtered$departemen,
+          main_grey,
+          indicator,
+          main_grey,
+          ifelse(choice == " ", "", choice),
+          main_lt_grey,
+          ifelse(is.na(analysis_filtered$subset),
+            "Calculé sur l'ensemble des ménages",
+            paste0("Sous-ensemble : ", analysis_filtered$subset)
+          ),
+          main_red,
+          ifelse(is.na(analysis_filtered$analysis_name),
+            "0%",
+            ifelse(analysis_filtered$analysis_name == "Proportion (%)",
+              paste0(analysis_filtered$stat, "%"),
+              analysis_filtered$stat
             )
-
-          ) |>
-            lapply(htmltools::HTML),
+          )
+        ) |>
+          lapply(htmltools::HTML),
         "Départemental et milieu" = sprintf(
           "<div class ='leaflet-hover'>
             <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
@@ -340,25 +335,25 @@ mod_map_main_server <- function(id){
           ifelse(choice == " ", "", choice),
           main_lt_grey,
           ifelse(is.na(analysis_filtered$subset),
-                 "Calculé sur l'ensemble des ménages",
-                 paste0("Sous-ensemble : ", analysis_filtered$subset)
+            "Calculé sur l'ensemble des ménages",
+            paste0("Sous-ensemble : ", analysis_filtered$subset)
           ),
           main_red,
           ifelse(is.na(analysis_filtered$analysis_name),
-                 "0%",
-                 ifelse(analysis_filtered$analysis_name == "Proportion (%)",
-                        paste0(analysis_filtered$stat, "%"),
-                        analysis_filtered$stat)
+            "0%",
+            ifelse(analysis_filtered$analysis_name == "Proportion (%)",
+              paste0(analysis_filtered$stat, "%"),
+              analysis_filtered$stat
+            )
           )
-
         ) |>
           lapply(htmltools::HTML)
       )
 
-      admin_line <- switch(
-        input$disagg,
+      admin_line <- switch(input$disagg,
         "Départemental" = admin1_line,
-        "Départemental et milieu" = stratum_line)
+        "Départemental et milieu" = stratum_line
+      )
 
 
       leaflet::leaflet(
@@ -374,39 +369,41 @@ mod_map_main_server <- function(id){
           dragging = TRUE,
           scrollWheelZoom = FALSE,
           easeLinearity = 0.35,
-          minZoom = 8,
-          maxZoom = 9)) |>
-
+          minZoom = 7,
+          maxZoom = 8.2
+        )
+      ) |>
         #------ Providers
         leaflet::addProviderTiles(leaflet::providers$CartoDB.PositronNoLabels,
-                                  options = leaflet::providerTileOptions(opacity = 0.5)) |>
-
-
+          options = leaflet::providerTileOptions(opacity = 0.5)
+        ) |>
         #------ Polygons
         leaflet::addPolygons(
-          opacity      = 0,
-          fillColor    = ~fillcol(stat),
-          color        = "#c4c4c4",
-          weight       = 2,
+          opacity = 0,
+          fillColor = ~ fillcol(stat),
+          color = "#c4c4c4",
+          weight = 2,
           smoothFactor = 0.5,
           # opacity      = 0.9,
-          fillOpacity  = 0.9,
-          options      = list(zIndex = 400),
+          fillOpacity = 0.9,
+          options = list(zIndex = 400),
           label = label,
 
           #------ Highlight
-          highlightOptions = leaflet::highlightOptions(fillColor    = main_lt_grey,
-                                                       color        = "#c4c4c4",
-                                                       weight       = 2,
-                                                       opacity      = 0.9,
-                                                       fillOpacity  = 0.5,
-                                                       bringToFront = F),
+          highlightOptions = leaflet::highlightOptions(
+            fillColor = main_lt_grey,
+            color = "#c4c4c4",
+            weight = 2,
+            opacity = 0.9,
+            fillOpacity = 0.5,
+            bringToFront = F
+          ),
           labelOptions = leaflet::labelOptions(
             noHide = FALSE,
             noWrap = FALSE,
             opacity = 0.9,
             direction = "auto",
-            offset = c(-10,0),
+            offset = c(-10, 0),
             textOnly = F,
             style = list(
               "padding" = "3px 8px",
@@ -415,7 +412,6 @@ mod_map_main_server <- function(id){
             )
           )
         ) |>
-
         #------ Limites administratives de strate
         leaflet::addPolylines(
           data = admin_line,
@@ -424,7 +420,6 @@ mod_map_main_server <- function(id){
           opacity = 1.0,
           options = list(zIndex = 400)
         ) |>
-
         #------- Limites administratives : contour
         leaflet::addPolylines(
           data = admin0_border,
@@ -434,7 +429,6 @@ mod_map_main_server <- function(id){
           opacity = 1.0,
           options = list(zIndex = 400)
         ) |>
-
         #------- Limites administratives : frontière
         leaflet::addPolylines(
           data = admin0_frontier,
@@ -443,7 +437,6 @@ mod_map_main_server <- function(id){
           opacity = 1.0,
           options = list(zIndex = 400)
         ) |>
-
         #------ Label Admin 1 :
         leaflet::addLabelOnlyMarkers(
           data = admin1_centroid,
@@ -459,7 +452,6 @@ mod_map_main_server <- function(id){
             )
           )
         ) |>
-
         #------ Legend
         leaflet::addLegend(
           position = "bottomright",
@@ -471,22 +463,21 @@ mod_map_main_server <- function(id){
           title = unique(na.omit(analysis_filtered$analysis_name))
         ) |>
         leaflet::addScaleBar(position = "bottomleft", leaflet::scaleBarOptions(imperial = FALSE))
-
     })
 
     output$map <- leaflet::renderLeaflet({
       choice_map()
-      })
+    })
 
 
 
 
     shiny::observeEvent(input$download_map, {
-      shinyscreenshot::screenshot(id = "map",
-                                  filename =  paste0("HTI MSNA 2022 - ", input$indicator, ifelse(input$choice == " ", "", paste0( " - ", input$choice)), ".png"))
+      shinyscreenshot::screenshot(
+        id = "map",
+        filename = paste0("HTI MSNA 2022 - ", input$indicator, ifelse(input$choice == " ", "", paste0(" - ", input$choice)), ".png")
+      )
     })
-
-
   })
 }
 

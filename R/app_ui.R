@@ -6,25 +6,36 @@
 #' @noRd
 app_ui <- function(request) {
   tagList(
+    tags$head(tags$style(
+      shiny::HTML(".well a {
+                  font-weight: bold;
+                  color: #EE5859;
+                  font-family: 'Leelawadee UI', 'Leelawadee', sans-serif;
+                  font-size: 12px;}"),
+      shiny::HTML(".well a:hover {
+                  font-weight: bold;
+                  color: #EE5859;
+                  font-family: 'Leelawadee UI', 'Leelawadee', sans-serif;
+                  font-size: 12px;}")
+    )),
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-      shiny::navbarPage(
-        title ="HTI - MSNA 2022 - Résultats préliminaires",
-        # tags$style(
-        #   type = "text/css",
-        #   ".shiny-output-error { visibility: hidden; }",
-        #   ".shiny-output-error:before { visibility: hidden; }"
-        # ),
-        mod_welcome_ui("welcome_1"),
-        mod_indicator_main_ui("indicator_main_1"),
-        mod_graph_main_ui("graph_main_1"),
-        mod_map_main_ui("map_main_1"),
-        mod_apropos_ui("apropos_1")
-          # )
-        )
+    # shiny::fluidPage(
+    #   list(
+    #     tags$head(
+    #       HTML('<link rel="icon" href="www/reach_logo.png"
+    #             type="image/png" />')))),
+    shiny::navbarPage(
+      title = "HTI - MSNA 2022 - Résultats préliminaires",
+      mod_welcome_ui("welcome_1"),
+      mod_indicator_main_ui("indicator_main_1"),
+      mod_graph_main_ui("graph_main_1"),
+      mod_map_main_ui("map_main_1"),
+      mod_apropos_ui("apropos_1")
+      # )
     )
-
+  )
 }
 
 #' Add external Resources to the Application
