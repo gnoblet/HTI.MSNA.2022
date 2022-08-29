@@ -3,3 +3,5 @@
 .Rdata
 .httr-oauth
 .DS_Store
+dev/04_test_maps.R
+test/test1.R
