@@ -43,7 +43,7 @@ mod_welcome_ui <- function(id) {
         shiny::h2("Méhodologie"),
         shiny::p("La collecte de données pour l'ensemble des départements à l'exception de l'Ouest a eu lieu du 13 juin au 10 août. 2484 ménages ont participé à l'enquête. Les entretiens ont été effectués en personne."),
         shiny::p("La collecte de données pour l'Ouest et la Zone métropolitaine de Port-au-Prince est encore en cours."),
-        shiny::p("REACH a effectué la collecte pour les ménages en population générale. L'échantillon est stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural, soit urbain). Voir carte de couverture ci-contre."),
+        shiny::p("REACH Initiative a effectué la collecte pour les ménages en population générale. L'échantillon est stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural, soit urbain). Voir carte de couverture ci-contre. Pour les populations déplacées et rapatriées, les données ont été collectées par l'OIM."),
         shiny::p("Le questionnaire a été mis au point avec les partenaires sectoriels et les groupes de travail thématiques. Il est traduit en créole haïtien. Le questionnaire est disponible ", shiny::tags$a("ici.", href = "https://www.impact-repository.org/document/reach/b2448f66/REACH_HTI_dap_MSNA-2022-1-1.xlsx")),
         shiny::p("Pour plus d'informations, voir l'onglet", shiny::tags$em("A propos."))
       )
@@ -112,8 +112,8 @@ mod_welcome_server <- function(id) {
       by = c("strate" = "stratum")
     )
 
-    fillcol <- leaflet_color_factor(pal = c("#877c60", main_lt_grey), domain = stratum$milieu)
-    fillcol_legend <- leaflet_color_factor(pal = c("#877c60", main_lt_grey), domain = stratum$milieu)
+    fillcol <- leaflet_color_factor(pal = c(main_grey, main_lt_grey), domain = stratum$milieu)
+    fillcol_legend <- leaflet_color_factor(pal = c(main_grey, main_lt_grey), domain = stratum$milieu)
 
 
     #------ Map
@@ -155,7 +155,7 @@ mod_welcome_server <- function(id) {
           scrollWheelZoom = FALSE,
           easeLinearity = 0.35,
           minZoom = 7,
-          maxZoom = 8.2
+          maxZoom = 8
         )
       ) |>
         #------ Set View
@@ -167,6 +167,7 @@ mod_welcome_server <- function(id) {
         #------ Polygons
         leaflet::addPolygons(
           fillColor = ~ fillcol(milieu),
+          color = main_lt_grey,
           weight = 0.2,
           smoothFactor = 0.5,
           opacity = 0.9,

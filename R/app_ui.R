@@ -9,15 +9,16 @@ app_ui <- function(request) {
     tags$head(tags$style(
       shiny::HTML(".well a {
                   font-weight: bold;
-                  color: #EE5859;
+                  color: #FFFFFF;
                   font-family: 'Leelawadee UI', 'Leelawadee', sans-serif;
-                  font-size: 12px;}"),
+                  font-size: 11px;}"),
       shiny::HTML(".well a:hover {
                   font-weight: bold;
-                  color: #EE5859;
+                  color: #FFFFFF;
                   font-family: 'Leelawadee UI', 'Leelawadee', sans-serif;
-                  font-size: 12px;}")
+                  font-size: 11px;}")
     )),
+    tags$head(tags$script(type="text/javascript", src = "www/code.js")),
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic

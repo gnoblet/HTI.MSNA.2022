@@ -214,36 +214,36 @@ leaflet_color_factor <- function(pal = visualizeR::pal_reach("main"), domain, na
 #' @noRd
 info_box <- function(color_main_title = visualizeR::cols_reach("main_red"),
                      color_sub_title = visualizeR::cols_reach("main_red"),
-                     color_pop_group = visualizeR::cols_reach("white"),
                      color_indicator = visualizeR::cols_reach("white"),
+                     color_choice = visualizeR::cols_reach("white"),
                      color_recall = visualizeR::cols_reach("white"),
                      color_subset = visualizeR::cols_reach("white"),
                      main_title = NULL,
                      sub_title = NULL,
-                     pop_group = NULL,
                      indicator = NULL,
+                     choice = NULL,
                      recall = NULL,
                      subset = NULL,
-                     font_size_main_title = "22px",
-                     font_size_sub_title = "18px",
-                     font_size_pop_group = "14px",
-                     font_size_indicator = "12px",
-                     font_size_recall = "12px",
-                     font_size_subset = "12px",
+                     font_size_main_title = "18px",
+                     font_size_sub_title = "15px",
+                     font_size_indicator = "10px",
+                     font_size_choice = "10px",
+                     font_size_recall = "11px",
+                     font_size_subset = "11px",
                      prefix_main_title = "",
                      prefix_sub_title = "",
-                     prefix_pop_group = "",
                      prefix_indicator = "",
+                     prefix_choice = "Option de réponse :",
                      prefix_recall = "Période de rappel :",
                      prefix_subset = "Sous-ensemble :") {
   glue_string <- glue::glue(
     "<span style = 'font-size: {font_size_main_title}; color: {color_main_title}; font-weight: bold; line-height: 1.2;'> <strong> {prefix_main_title} </strong> {main_title} </span>
                   <br>
                   <span style = 'font-size: {font_size_sub_title}; color: {color_sub_title}; font-weight: bold;line-height: 1.2;'> <strong> {prefix_sub_title} </strong> {sub_title} </span>
-                  <br>
-                  <span style = 'font-size: {font_size_pop_group}; color: {color_pop_group}; font-weight: bold;line-height: 1.2;'> <strong> {prefix_pop_group} </strong> {pop_group} </span>
                   <hr>
                   <span style = 'font-size: {font_size_indicator}; color: {color_indicator}; font-weight: bold;'> <strong> {prefix_indicator} </strong> {indicator} </span>
+                  <br>
+                  <span style = 'font-size: {font_size_choice}; color: {color_choice};'> <strong> {prefix_choice} </strong> {choice} </span>
                   <hr>
                   <span style = 'font-size: {font_size_recall}; color: {color_recall};'> <strong> {prefix_recall} </strong> {recall} </span>
                   <br>
@@ -255,22 +255,22 @@ info_box <- function(color_main_title = visualizeR::cols_reach("main_red"),
     shiny::HTML()
 }
 
+#                   <br>
+#<span style = 'font-size: {font_size_pop_group}; color: {color_pop_group}; font-weight: bold;line-height: 1.2;'> # <strong> {prefix_pop_group} </strong> {pop_group} </span>
 
-reduced_info_box <- function(color_pop_group = visualizeR::cols_reach("white"),
-                             color_recall = visualizeR::cols_reach("white"),
+reduced_info_box <- function(color_recall = visualizeR::cols_reach("white"),
                              color_subset = visualizeR::cols_reach("white"),
-                             pop_group = NULL,
+                             # pop_group = NULL,
                              recall = NULL,
                              subset = NULL,
-                             font_size_pop_group = "14px",
-                             font_size_recall = "12px",
-                             font_size_subset = "12px",
-                             prefix_pop_group = "",
+                             # font_size_pop_group = "12px",
+                             font_size_recall = "10px",
+                             font_size_subset = "10px",
+                             # prefix_pop_group = "",
                              prefix_recall = "Période de rappel :",
                              prefix_subset = "Sous-ensemble :") {
   glue_string <- glue::glue(
     "
-    <span style = 'font-size: {font_size_pop_group}; color: {color_pop_group}; font-weight: bold;line-height: 1.2;'> <strong> {prefix_pop_group} </strong> {pop_group} </span>
                   <hr>
                   <span style = 'font-size: {font_size_recall}; color: {color_recall};'> <strong> {prefix_recall} </strong> {recall} </span>
                   <br>
@@ -282,12 +282,15 @@ reduced_info_box <- function(color_pop_group = visualizeR::cols_reach("white"),
     shiny::HTML()
 }
 
+#    <span style = 'font-size: {font_size_pop_group}; color: {color_pop_group}; font-weight: bold;line-height: 1.2;'> <strong> {prefix_pop_group} </strong> {pop_group} </span>
+
 
 #' @noRd
-ggplot_to_plotly <- function(ggplot, filename) {
+ggplot_to_plotly <- function(ggplot, filename, var1) {
   plotly_plot <- plotly::ggplotly(ggplot) |>
     plotly::layout(
-      xaxis = list(autorange = TRUE, fixedrange = TRUE) # ,
+      xaxis = list(autorange = TRUE, fixedrange = TRUE),
+      font = "Leelawadee UI"
       # yaxis = list(autorange = TRUE, fixedrange = TRUE)
     ) |>
     plotly::style(

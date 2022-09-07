@@ -27,9 +27,9 @@ mod_map_main_ui <- function(id) {
         class = "well",
         shinyWidgets::prettyRadioButtons(
           inputId = ns("disagg"),
-          label = "Niveau géographique",
-          choices = c("Départemental", "Départemental et milieu"),
-          selected = "Départemental",
+          label = "Désagrégation par milieu",
+          choices = c("Ensemble", "Rural et urbain"),
+          selected = "Ensemble",
           fill = TRUE,
           status = "danger"
         ),
@@ -37,25 +37,25 @@ mod_map_main_ui <- function(id) {
           inputId = ns("rq"),
           label = "Secteur",
           choices = c("Information générale", "Démographie du ménage", "Déplacement", "Washington Group", "Santé", "Education", "Sécurité alimentaire", "Moyens de subsistance", "ABNA", "EPHA", "Protection", "Redevabilité"),
-          selected = "EPHA"
+          selected = "Redevabilité"
         ),
         shiny::selectInput(
           inputId = ns("sub_rq"),
           label = "Sous-secteur",
-          choices = "Accès à l'eau",
-          selected = "Accès à l'eau"
+          choices = "Besoins prioritaires"
+          # selected = "Besoins prioritaires"
         ),
         shiny::selectInput(
           inputId = ns("indicator"),
           label = "Indicateur",
-          choices = "% de ménages par source d'eau de boisson",
-          selected = "% de ménages par source d'eau de boisson"
+          choices = "% de ménages par type de besoin prioritaire rapporté",
+          selected = "% de ménages par type de besoin prioritaire rapporté"
         ),
         shiny::selectInput(
           inputId = ns("choice"),
-          label = "Choix de réponse",
-          choices = "Source protégée",
-          selected = "Source protégée"
+          label = "Option de réponse",
+          choices = "Abris / logement / habitat",
+          selected = "Abris / logement / habitat"
         ),
         shiny::img(src = "www/reach_logo.png", width = "60%", align = "left")
       ),
@@ -70,7 +70,7 @@ mod_map_main_ui <- function(id) {
         width = 320,
         shiny::p(shiny::htmlOutput(ns("infobox"))),
         shiny::hr(),
-        actionButton(ns("download_map"), icon = shiny::icon("download"), "Télécharger la carte")
+        shiny::actionButton(ns("download_map"), icon = shiny::icon("download"), "Télécharger la carte", style = "font-size: 11px")
       )
     )
   )
@@ -104,7 +104,7 @@ mod_map_main_server <- function(id) {
       sf::st_point_on_surface()
 
     admin1_labels_halo <- sprintf(
-      '<strong><span class = "leaflet-admin1"; style="font-size: 18px; color: %s">%s</span></strong>',
+      '<strong><span class = "leaflet-admin1"; style="font-size: 15px; color: %s">%s</span></strong>',
       main_grey, admin1_centroid$ADM1_FR
     ) |>
       lapply(htmltools::HTML)
@@ -131,9 +131,9 @@ mod_map_main_server <- function(id) {
 
     analysis <- reactive({
       switch(input$disagg,
-        "Départemental" = HTI.MSNA.2022::data_admin1 |>
+        "Ensemble" = HTI.MSNA.2022::data_admin1 |>
           mutate_if_nulla(choices_label, " "),
-        "Départemental et milieu" = HTI.MSNA.2022::data_stratum |>
+        "Rural et urbain" = HTI.MSNA.2022::data_stratum |>
           mutate_if_nulla(choices_label, " ")
       )
     })
@@ -175,6 +175,7 @@ mod_map_main_server <- function(id) {
             sub_rq == input$sub_rq,
             indicator == input$indicator
           ) |>
+          dplyr::arrange(choices_label) |>
           dplyr::pull(choices_label) |>
           unique()
       )
@@ -183,35 +184,43 @@ mod_map_main_server <- function(id) {
 
     # Server : Infobox --------------------------------------------------------
 
-    output$infobox <- shiny::renderUI({
-      sector <- input$rq
-      sub_sector <- input$sub_rq
-      indicator <- input$indicator
-      choice <- input$choice
+    sector <- shiny::reactive({input$rq})
+    sub_sector <- shiny::reactive({input$sub_rq})
+    indicator <- shiny::reactive({input$indicator})
+    choice <- shiny::reactive({input$choice})
 
-      analysis_filtered <- analysis() |>
-        dplyr::filter(sector == rq, sub_sector == sub_rq, choices_label == choice)
+    analysis_filtered <- shiny::reactive({
+      analysis() |>
+        dplyr::filter(
+          sector() == rq,
+          sub_sector() == sub_rq,
+          indicator() == indicator)
+    })
+
+    output$infobox <- shiny::renderUI({
+
 
       recall <- ifelse(
-        is.na(unique(analysis_filtered$recall)),
+        is.na(unique(analysis_filtered()$recall)),
         "Aucune",
-        unique(analysis_filtered$recall)
+        unique(analysis_filtered()$recall)
       )
 
       subset <-
         ifelse(
-          is.na(unique(analysis_filtered$subset)),
+          is.na(unique(analysis_filtered()$subset)),
           "Aucun",
-          unique(analysis_filtered$subset)
+          unique(analysis_filtered()$subset)
         )
 
       pop_group <- "Population générale"
 
       info_box(
-        main_title = sector,
-        sub_title = sub_sector,
-        pop_group = pop_group,
-        indicator = indicator,
+        main_title = sector(),
+        sub_title = sub_sector(),
+        # pop_group = pop_group,
+        indicator = indicator(),
+        choice = choice(),
         recall = recall,
         subset = subset,
         prefix_recall = "Période de rappel :",
@@ -233,11 +242,11 @@ mod_map_main_server <- function(id) {
         )
 
       missing_admin <- switch(input$disagg,
-        "Départemental" = admin1_f() |>
+        "Ensemble" = admin1_f() |>
           dplyr::filter(!admin1 %in% c("ouest")) |>
           dplyr::filter(!(admin1 %in% analysis_filtered$group_disagg)) |>
           dplyr::rename(group_disagg = admin1, group_disagg_label = admin1_name),
-        "Départemental et milieu" = stratum_f() |>
+        "Rural et urbain" = stratum_f() |>
           dplyr::filter(!stratum %in% c("ouest_urbain", "ouest_rural")) |>
           dplyr::filter(!(stratum %in% analysis_filtered$group_disagg)) |>
           dplyr::rename(group_disagg = stratum, group_disagg_label = stratum_name)
@@ -250,14 +259,14 @@ mod_map_main_server <- function(id) {
 
 
       analysis_filtered <- switch(input$disagg,
-        "Départemental" = admin1_polygon |>
+        "Ensemble" = admin1_polygon |>
           dplyr::left_join(analysis_filtered, by = c("admin1" = "group_disagg")) |>
           dplyr::mutate(
             stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)),
             analysis_name = ifelse(analysis_name == "Proportion", "Proportion (%)", analysis_name)
           ) |>
           dplyr::filter(admin1 != "ouest"),
-        "Départemental et milieu" = stratum |>
+        "Rural et urbain" = stratum |>
           dplyr::left_join(
             analysis_filtered |> dplyr::mutate(
               milieu = ifelse(stringr::str_detect(group_disagg, "_urbain"), "Urbain", "Rural"),
@@ -285,13 +294,13 @@ mod_map_main_server <- function(id) {
 
       #------ Highlight label
       label <- switch(input$disagg,
-        "Départemental" = sprintf(
+        "Ensemble" = sprintf(
           "<div class ='leaflet-hover'>
-            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
-            <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
-            <span style = 'font-size: 14px; color: %s;'> %s </span><br>
-            <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
-            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span>
+            <span style = 'font-size: 15px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 11px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 11px; color: %s;'> %s </span><br>
+            <span style = 'font-size: 11px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 15px; color: %s; font-weight: bold;'> %s </span>
             </div>
             ",
           main_grey,
@@ -315,14 +324,14 @@ mod_map_main_server <- function(id) {
           )
         ) |>
           lapply(htmltools::HTML),
-        "Départemental et milieu" = sprintf(
+        "Rural et urbain" = sprintf(
           "<div class ='leaflet-hover'>
-            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
-            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
-            <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
-            <span style = 'font-size: 14px; color: %s;'> %s </span><br>
-            <span style = 'font-size: 14px; color: %s; font-weight: bold;'> %s </span><br>
-            <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span>
+            <span style = 'font-size: 15px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 15px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 11px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 11px; color: %s;'> %s </span><br>
+            <span style = 'font-size: 11px; color: %s; font-weight: bold;'> %s </span><br>
+            <span style = 'font-size: 15px; color: %s; font-weight: bold;'> %s </span>
             </div>
             ",
           main_grey,
@@ -351,8 +360,8 @@ mod_map_main_server <- function(id) {
       )
 
       admin_line <- switch(input$disagg,
-        "Départemental" = admin1_line,
-        "Départemental et milieu" = stratum_line
+        "Ensemble" = admin1_line,
+        "Rural et urbain" = stratum_line
       )
 
 
@@ -370,7 +379,7 @@ mod_map_main_server <- function(id) {
           scrollWheelZoom = FALSE,
           easeLinearity = 0.35,
           minZoom = 7,
-          maxZoom = 8.2
+          maxZoom = 8
         )
       ) |>
         #------ Providers
