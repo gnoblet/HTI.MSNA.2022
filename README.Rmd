@@ -21,7 +21,7 @@ knitr::opts_chunk$set(
 
 The goal of HTI.MSNA.2022 is to provide some basic Shiny app made with [Golem](https://thinkr-open.github.io/golem/).
 
-It stores the R Shiny app made for the Multi Sector Needs Assessment (MSNA) 2022 facilitated by REACH Initiative in Haiti, with the primary goal of helping the humanitarian community to visualize raw results to information the HPC 2023 (HNO and HRP).
+It stores the R Shiny app made for the Multi Sector Needs Assessment (MSNA) 2022 facilitated by REACH Initiative in Haiti, accessible [here](https://reach-info.org/hti/msna2022/fr/), with the primary goal of helping the humanitarian community to visualize raw results to information the HPC 2023 (HNO and HRP).
 
 ## Installation
 
