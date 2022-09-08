@@ -16,7 +16,7 @@ It stores the R Shiny app made for the Multi Sector Needs Assessment
 (MSNA) 2022 facilitated by REACH Initiative in Haiti, accessible
 [here](https://reach-info.org/hti/msna2022/fr/), with the primary goal
 of helping the humanitarian community to visualize raw results to
-information the HPC 2023 (HNO and HRP).
+inform the HPC 2023 (HNO and HRP).
 
 ## Installation
 
