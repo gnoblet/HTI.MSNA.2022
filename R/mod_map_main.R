@@ -95,8 +95,9 @@ mod_map_main_server <- function(id) {
 
     #----- Spatial data
     admin1_polygon <- HTI.MSNA.2022::hti_admin1_polygon |>
-      dplyr::mutate(admin1 = stringr::str_replace_all(stringr::str_to_lower(departemen), " |-|'", "_")) |>
-      dplyr::mutate(admin1 = ifelse(admin1 == "grande_anse", "grand_anse", admin1))
+      dplyr::mutate(admin1 = stringr::str_replace_all(stringr::str_to_lower(departemen), " |-|'", "_"))
+    # |>
+    #   dplyr::mutate(admin1 = ifelse(admin1 == "grande_anse", "grand_anse", admin1))
 
     admin1_line <- HTI.MSNA.2022::hti_admin1_line
 
