@@ -76,7 +76,7 @@ mod_welcome_server <- function(id) {
     main_red <- visualizeR::cols_reach("main_red")
     main_grey <- visualizeR::cols_reach("main_grey")
     main_lt_grey <- visualizeR::cols_reach("main_lt_grey")
-
+    dark_grey <- visualizeR::cols_reach("dk_grey")
 
     admin0_frontier <- HTI.MSNA.2022::hti_admin0_frontier
     admin0_border <- HTI.MSNA.2022::hti_admin0_border
@@ -201,7 +201,7 @@ mod_welcome_server <- function(id) {
         #------ Limites administratives
         leaflet::addPolylines(
           data = admin1_line,
-          color = main_grey,
+          color = dark_grey,
           weight = 1.3,
           opacity = 1.0,
           options = list(zIndex = 400)
