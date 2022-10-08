@@ -21,8 +21,8 @@ mod_graph_main_ui <- function(id) {
         shinyWidgets::prettyRadioButtons(
           inputId = ns("disagg"),
           label = "Niveau géographique",
-          choices = c("National (hors Ouest)", "Départemental"),
-          selected = "Départemental",
+          choices = c("National (hors ZMPAP)", "Départemental"),
+          selected = "National (hors ZMPAP)",
           fill = TRUE,
           status = "danger"
         ),
@@ -30,7 +30,7 @@ mod_graph_main_ui <- function(id) {
           inputId = ns("milieu"),
           label = "Désagrégation par milieu",
           choices = c("Ensemble", "Rural et urbain"),
-          selected = "Rural et urbain",
+          selected = "Ensemble",
           fill = TRUE,
           status = "danger"
         ),
@@ -43,13 +43,12 @@ mod_graph_main_ui <- function(id) {
         shiny::selectInput(
           inputId = ns("sub_rq"),
           label = "Sous-secteur",
-          choices = "Besoins prioritaires",
+          choices = "Besoins prioritaires"
         ),
         shiny::selectInput(
           inputId = ns("indicator"),
           label = "Indicateur",
-          choices = "% de ménages par type de besoin prioritaire rapporté",
-          selected = "% de ménages par type de besoin prioritaire rapporté"
+          choices = "% de ménages par type de besoin prioritaire rapporté"
         ),
         shiny::conditionalPanel(
           condition = "input.disagg == 'Départemental' || input.disagg == 'Départemental et milieu'",
@@ -57,8 +56,7 @@ mod_graph_main_ui <- function(id) {
           shiny::selectInput(
             inputId = ns("choice"),
             label = "Option de réponse",
-            choices = "Abris / logement / habitat",
-            selected = "Abris / logement / habitat"
+            choices = "Abris / logement / habitat"
           )
         ),
         # shiny::hr(),
@@ -117,7 +115,7 @@ mod_graph_main_server <- function(id) {
 
     analysis <- reactive({
       switch(input$disagg,
-             "National (hors Ouest)" =
+             "National (hors ZMPAP)" =
                switch(input$milieu,
                       "Ensemble" = HTI.MSNA.2022::data_main |>
                         mutate_if_nulla(choices_label, " ") |>
@@ -262,7 +260,7 @@ mod_graph_main_server <- function(id) {
       # plotly::renderPlotly(
       shiny::renderPlot(
         expr = {
-          if (input$disagg == "National (hors Ouest)" & input$milieu == "Ensemble") {
+          if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Ensemble") {
 
             analysis_filtered <- analysis() |>
               dplyr::filter(
@@ -284,7 +282,6 @@ mod_graph_main_server <- function(id) {
               )
 
             missing_admin1 <- admin1_f() |>
-              dplyr::filter(!admin1 %in% c("ouest")) |>
               dplyr::filter(!(admin1 %in% analysis_filtered$group_disagg)) |>
               dplyr::rename(group_disagg = admin1, group_disagg_label = admin1_name)
 
@@ -293,7 +290,7 @@ mod_graph_main_server <- function(id) {
               mutate_if_nulla(stat, 0) |>
               dplyr::arrange(dplyr::desc(stat))
 
-          } else if (input$disagg == "National (hors Ouest)" & input$milieu == "Rural et urbain") {
+          } else if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Rural et urbain") {
 
             analysis_filtered <- analysis() |>
               dplyr::filter(
@@ -322,7 +319,6 @@ mod_graph_main_server <- function(id) {
               )
 
             missing_stratum <- stratum_f() |>
-              dplyr::filter(!stratum %in% c("ouest_urbain", "ouest_rural")) |>
               dplyr::filter(!(stratum %in% analysis_filtered$group_disagg)) |>
               dplyr::rename(group_disagg = stratum, group_disagg_label = stratum_name)
 
@@ -354,7 +350,7 @@ mod_graph_main_server <- function(id) {
               )
             )
           } else {
-            if (input$disagg == "National (hors Ouest)" & input$milieu == "Ensemble") {
+            if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Ensemble") {
 
               graph <- visualizeR::hbar(
                 .tbl = analysis_filtered |>
@@ -406,7 +402,7 @@ mod_graph_main_server <- function(id) {
                   hjust = 1.5,
                   colour = "white",
                   fontface = "bold")
-            } else if (input$disagg == "National (hors Ouest)" & input$milieu == "Rural et urbain") {
+            } else if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Rural et urbain") {
               graph <- visualizeR::hbar(
                 .tbl = analysis_filtered |>
                   dplyr::mutate(choices_label = factor(choices_label, levels = unique(analysis_filtered$choices_label))),
@@ -470,7 +466,7 @@ mod_graph_main_server <- function(id) {
 
           if (input$disagg == "Départemental")  graph <- graph + ggplot2::ggtitle(indicator_name(), subtitle = paste("Option de réponse :",  choice_name(), sep = " "))
 
-          if (input$disagg == "National (hors Ouest)")  graph <- graph + ggplot2::ggtitle(indicator_name())
+          if (input$disagg == "National (hors ZMPAP)")  graph <- graph + ggplot2::ggtitle(indicator_name())
 
           graph <- graph +
             ggplot2::theme(
@@ -488,7 +484,7 @@ mod_graph_main_server <- function(id) {
     shiny::observeEvent(input$download_graph, {
       shinyscreenshot::screenshot(
         id = "graph",
-        filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National (hors Ouest)", paste0(" - ", input$choice), ""))
+        filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National (hors ZMPAP)", paste0(" - ", input$choice), ""))
       )
     })
   })

@@ -43,19 +43,16 @@ mod_map_main_ui <- function(id) {
           inputId = ns("sub_rq"),
           label = "Sous-secteur",
           choices = "Besoins prioritaires"
-          # selected = "Besoins prioritaires"
         ),
         shiny::selectInput(
           inputId = ns("indicator"),
           label = "Indicateur",
-          choices = "% de ménages par type de besoin prioritaire rapporté",
-          selected = "% de ménages par type de besoin prioritaire rapporté"
+          choices = "% de ménages par type de besoin prioritaire rapporté"
         ),
         shiny::selectInput(
           inputId = ns("choice"),
           label = "Option de réponse",
-          choices = "Abris / logement / habitat",
-          selected = "Abris / logement / habitat"
+          choices = "Abris / logement / habitat"
         ),
         shiny::img(src = "www/reach_logo.png", width = "60%", align = "left")
       ),
@@ -96,8 +93,6 @@ mod_map_main_server <- function(id) {
     #----- Spatial data
     admin1_polygon <- HTI.MSNA.2022::hti_admin1_polygon |>
       dplyr::mutate(admin1 = stringr::str_replace_all(stringr::str_to_lower(departemen), " |-|'", "_"))
-    # |>
-    #   dplyr::mutate(admin1 = ifelse(admin1 == "grande_anse", "grand_anse", admin1))
 
     admin1_line <- HTI.MSNA.2022::hti_admin1_line
 
@@ -117,8 +112,7 @@ mod_map_main_server <- function(id) {
 
     #------ Spatial stratum
     stratum <- HTI.MSNA.2022::hti_stratum |>
-      janitor::clean_names() |>
-      dplyr::filter(!(strate %in% c("ouest_urbain", "ouest_rural")))
+      janitor::clean_names()
 
     stratum_line <- stratum |>
       sf::st_cast("MULTILINESTRING")
@@ -244,11 +238,9 @@ mod_map_main_server <- function(id) {
 
       missing_admin <- switch(input$disagg,
         "Ensemble" = admin1_f() |>
-          dplyr::filter(!admin1 %in% c("ouest")) |>
           dplyr::filter(!(admin1 %in% analysis_filtered$group_disagg)) |>
           dplyr::rename(group_disagg = admin1, group_disagg_label = admin1_name),
         "Rural et urbain" = stratum_f() |>
-          dplyr::filter(!stratum %in% c("ouest_urbain", "ouest_rural")) |>
           dplyr::filter(!(stratum %in% analysis_filtered$group_disagg)) |>
           dplyr::rename(group_disagg = stratum, group_disagg_label = stratum_name)
       )
@@ -265,8 +257,7 @@ mod_map_main_server <- function(id) {
           dplyr::mutate(
             stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1)),
             analysis_name = ifelse(analysis_name == "Proportion", "Proportion (%)", analysis_name)
-          ) |>
-          dplyr::filter(admin1 != "ouest"),
+          ) ,
         "Rural et urbain" = stratum |>
           dplyr::left_join(
             analysis_filtered |> dplyr::mutate(

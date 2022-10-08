@@ -41,9 +41,9 @@ mod_welcome_ui <- function(id) {
         right = 30,
         width = 350,
         shiny::h2("Méhodologie"),
-        shiny::p("La collecte de données pour l'ensemble des départements à l'exception de l'Ouest a eu lieu du 13 juin au 10 août. 2484 ménages ont participé à l'enquête. Les entretiens ont été effectués en personne."),
-        shiny::p("La collecte de données pour l'Ouest et la Zone métropolitaine de Port-au-Prince est encore en cours."),
-        shiny::p("REACH Initiative a effectué la collecte pour les ménages en population générale. L'échantillon est stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural, soit urbain). Voir carte de couverture ci-contre. Pour les populations déplacées et rapatriées, les données ont été collectées par l'OIM."),
+        shiny::p("La collecte de données pour l'ensemble des départements à l'exception de la zone métropolitaine de Port-au-Prince (ZMPAP) a eu lieu du 12 juin au 19 août. 2708 ménages ont participé à l'enquête. Les entretiens ont été effectués en personne."),
+        shiny::p("Le nettoyage et l'analyse des données pour la Zone métropolitaine de Port-au-Prince sont encore en cours."),
+        shiny::p("REACH Initiative a effectué la collecte pour les ménages en population générale. L'échantillon est stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural, soit urbain). L'échantillon n'a pas pu être complété pour le département de l'Ouest en zone rurale du fait des contraintes sécuritaires de septembre 2022, les résultats sont donc à considérer comme indicatifs. Voir carte de couverture ci-contre. Pour les populations déplacées et rapatriées, les données ont été collectées par l'OIM."),
         shiny::p("Le questionnaire a été mis au point avec les partenaires sectoriels et les groupes de travail thématiques. Il est traduit en créole haïtien. Le questionnaire est disponible ", shiny::tags$a("ici.", href = "https://www.impact-repository.org/document/reach/b2448f66/REACH_HTI_dap_MSNA-2022-1-1.xlsx")),
         shiny::p("Pour plus d'informations, voir l'onglet", shiny::tags$em("A propos."))
       )
@@ -76,7 +76,7 @@ mod_welcome_server <- function(id) {
     main_red <- visualizeR::cols_reach("main_red")
     main_grey <- visualizeR::cols_reach("main_grey")
     main_lt_grey <- visualizeR::cols_reach("main_lt_grey")
-
+    dark_grey <- visualizeR::cols_reach("dk_grey")
 
     admin0_frontier <- HTI.MSNA.2022::hti_admin0_frontier
     admin0_border <- HTI.MSNA.2022::hti_admin0_border
@@ -99,8 +99,7 @@ mod_welcome_server <- function(id) {
 
     #------ Spatial stratum
     stratum <- HTI.MSNA.2022::hti_stratum |>
-      janitor::clean_names() |>
-      dplyr::filter(!(strate %in% c("ouest_urbain", "ouest_rural")))
+      janitor::clean_names()
 
     #------ Basic info
     basic_info <- HTI.MSNA.2022::hti2202_basic_info |>
@@ -201,7 +200,7 @@ mod_welcome_server <- function(id) {
         #------ Limites administratives
         leaflet::addPolylines(
           data = admin1_line,
-          color = main_grey,
+          color = dark_grey,
           weight = 1.3,
           opacity = 1.0,
           options = list(zIndex = 400)

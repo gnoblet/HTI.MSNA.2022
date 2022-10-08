@@ -21,7 +21,7 @@ mod_apropos_ui <- function(id) {
         shiny::fluidRow(
           shiny::wellPanel(
             shiny::h2("Téléchargement, informations complétementaires et contacts"),
-            shiny::p("La collecte de données pour l'Ouest et la Zone métropolitaine de Port-au-Prince est encore en cours."),
+            shiny::p("Le nettoyage et l'analyse des données pour la Zone métropolitaine de Port-au-Prince sont encore en cours."),
             shiny::p(" Si vous souhaitez de plus amples informations sur les objectifs de la recherche et la méthodologie, les termes de référence de l'évaluation sont disponibles ", shiny::tags$a("ici.", class = "a", href = "https://www.impact-repository.org/document/reach/dc728cf9/REACH_HTI_tor_MSNA-2022-1.pdf"), "Le questionnaire a été mis au point avec les partenaires sectoriels et les groupes de travail thématiques au sein de la coordination humanitaire d'Haïti. Il est traduit en créole haïtien. Le questionnaire est disponible ", shiny::tags$a("ici.", class = "a", href = "https://www.impact-repository.org/document/reach/b2448f66/REACH_HTI_dap_MSNA-2022-1-1.xlsx"), "Si vous souhaitez des analyses complémentaires ou plus d'informations, vous pouvez contacter", shiny::tags$a("guillaume.noblet@reach-initiative.org", class = "a", href = "mailto:guillaume.noblet@reach-initiative.org")),
             shiny::p("Le jeu de données est disponible sur le", shiny::tags$a("REACH Resource Center", class = "a", href = "https://www.impact-repository.org/document/reach/60f94a18/REACH_HTI_dataset_without-West_MSNA-2022.xlsx"), ". L'intégralité des résultats des analyses présentées dans le tableau de bord sont accessibles sur demande.")
           )
@@ -32,7 +32,7 @@ mod_apropos_ui <- function(id) {
             shiny::p("Trois groupes de population ont été identifiés comme prioritaires dans le cadre de la MSNA – la population générale et les populations déplacées et rapatriées enregistrées auprès de l’OIM. Les trois groupes sont les suivants :"),
             reactable::reactableOutput(ns("table_group_pop")),
             shiny::br(),
-            shiny::p("REACH Initiative a effectué la collecte pour les ménages en population générale. La collecte de données a eu lieu de 14 juin à 15 août et 2484 ménages ont participé à l'enquête. Les entretiens ont été effectués en personne. L'échantillon était un échantillon stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural soit urbain). Pour les populations déplacées et rapatriées, les données ont été collectées par l'OIM.")
+            shiny::p("REACH Initiative a effectué la collecte pour les ménages en population générale. La collecte de données a eu lieu de 12 juin au 19 août et 2708 ménages ont participé à l'enquête. Les entretiens ont été effectués en personne. L'échantillon était un échantillon stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural soit urbain). Pour les populations déplacées et rapatriées, les données ont été collectées par l'OIM.")
           )
         )
       ),
@@ -58,10 +58,11 @@ mod_apropos_ui <- function(id) {
         shiny::wellPanel(
           shiny::h2("Acronymes"),
           tags$ul(
+            tags$li(shiny::strong("ZMPAP :"), "zone métropolitaine de Port-au-Prince"),
             tags$li(shiny::strong("MSNA :"), "évaluation multisectorielle des besoins ou ", shiny::em("multi-sectoral needs assessment "), "en Anglais"),
             tags$li(shiny::strong("EPHA :"), "eau potable, hygiène et assainissement"),
             tags$li(shiny::strong("ABNA :"), "abris et biens non alimentaires"),
-            tags$li(shiny::strong("OIM : "), "Office International pour les Migrations"),
+            tags$li(shiny::strong("OIM : "), "Organisation Internationale pour les Migrations"),
             tags$li(shiny::strong("GCIS : "), "Groupe de coordination inter-secteur")
             )
           )
@@ -124,7 +125,7 @@ mod_apropos_ui <- function(id) {
         6,
         shiny::fluidRow(
         class = "fluid-row-padding",
-        shiny::h2("Autres bailleurs et partenaires opérationnels :"),
+        shiny::h2("Autres financements et partentariats opérationnels :"),
 
           shiny::column(
             6,
