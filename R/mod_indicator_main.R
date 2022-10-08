@@ -22,8 +22,8 @@ mod_indicator_main_ui <- function(id) {
         shinyWidgets::prettyRadioButtons(
           inputId = ns("disagg"),
           label = "Niveau géographique",
-          choices = c("National (hors Ouest)", "Départemental"),
-          selected = "Départemental",
+          choices = c("National (hors ZMPAP)", "Départemental"),
+          selected = "National (hors ZMPAP)",
           fill = TRUE,
           status = "danger"
         ),
@@ -31,7 +31,7 @@ mod_indicator_main_ui <- function(id) {
           inputId = ns("milieu"),
           label = "Désagrégation par milieu",
           choices = c("Ensemble", "Rural et urbain"),
-          selected = "Rural et urbain",
+          selected = "Ensemble",
           fill = TRUE,
           status = "danger"
         ),
@@ -44,14 +44,12 @@ mod_indicator_main_ui <- function(id) {
         shiny::selectInput(
           inputId = ns("sub_rq"),
           label = "Sous-secteur",
-          choices = "Besoins prioritaires",
-          selected = "Besoins prioritaires"
+          choices = "Besoins prioritaires"
         ),
         shiny::selectInput(
           inputId = ns("indicator"),
           label = "Indicateur",
-          choices = "% de ménages par type de besoin prioritaire rapporté",
-          selected = "% de ménages par type de besoin prioritaire rapporté"
+          choices = "% de ménages par type de besoin prioritaire rapporté"
         ),
         # shiny::hr(),
         shiny::p(shiny::htmlOutput(ns("infobox")))
@@ -68,14 +66,9 @@ mod_indicator_main_ui <- function(id) {
     shiny::fluidRow(
       shiny::fixedPanel(
         id = "reach-logo-indicator",
-        # fixed = TRUE,
-        # draggable = F,
-        # bottom = "7%",
-        # top = "93%",
         left = "auto",
         opacity = 0.8,
         right = 30,
-        # width = 400,
         shiny::br(),
         shiny::img(src = "www/reach_logo.png",height = "40px", align = "left")
       )
@@ -102,12 +95,11 @@ mod_indicator_main_server <- function(id) {
 
     analysis <- reactive({
       switch(input$disagg,
-        "National (hors Ouest)" =
+        "National (hors ZMPAP)" =
           switch(input$milieu,
             "Ensemble" = HTI.MSNA.2022::data_main |>
               mutate_if_nulla(choices_label, " ") |>
               mutate_if_nulla(stat, 0) |>
-              dplyr::arrange(dplyr::desc(stat)) |>
               dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))),
             "Rural et urbain" = HTI.MSNA.2022::data_milieu |>
               mutate_if_nulla(choices_label, " ") |>
@@ -232,10 +224,8 @@ mod_indicator_main_server <- function(id) {
       pop_group <- "Population générale"
 
       reduced_info_box(
-        # pop_group = pop_group,
         recall = recall,
         subset = subset,
-        # prefix_pop_group = "Groupe de population : ",
         prefix_recall = "Période de rappel :",
         prefix_subset = "Sous-ensemble :"
       )
@@ -264,10 +254,10 @@ mod_indicator_main_server <- function(id) {
         "Le tableau se met à jour."
       ))
 
-      if (input$disagg == "National (hors Ouest)" & input$milieu == "Ensemble") {
+      if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Ensemble") {
         filtered <- analysis_filtered |>
           dplyr::select("Type d'analyse" = analysis_name, choices_label, "Statistique" = stat)
-      } else if (input$disagg == "Départemental" & input$milieu == "Ensemble" | (input$disagg == "National (hors Ouest)" & input$milieu == "Rural et urbain")) {
+      } else if (input$disagg == "Départemental" & input$milieu == "Ensemble" | (input$disagg == "National (hors ZMPAP)" & input$milieu == "Rural et urbain")) {
         filtered <- analysis_filtered |>
           impactR::deselect(id_analysis, rq, sub_rq, choices, recall, subset, indicator, analysis_name)
       } else if (input$disagg == "Départemental" & input$milieu == "Rural et urbain") {
@@ -306,13 +296,14 @@ mod_indicator_main_server <- function(id) {
               "Grand'Anse - Rural" = reactable::colDef(name = "Rural"),
               "Nippes - Urbain" = reactable::colDef(name = "Urbain"),
               "Nippes - Rural" = reactable::colDef(name = "Rural"),
+              "Nord - Urbain" = reactable::colDef(name = "Urbain"),
+              "Nord - Rural" = reactable::colDef(name = "Rural"),
               "Nord Est - Urbain" = reactable::colDef(name = "Urbain"),
               "Nord Est - Rural" = reactable::colDef(name = "Rural"),
               "Nord Ouest - Urbain" = reactable::colDef(name = "Urbain"),
               "Nord Ouest - Rural" = reactable::colDef(name = "Rural"),
-              "Artibonite - Rural" = reactable::colDef(name = "Rural"),
-              "Nord - Urbain" = reactable::colDef(name = "Urbain"),
-              "Nord - Rural" = reactable::colDef(name = "Rural"),
+              "Ouest - Urbain" = reactable::colDef(name = "Urbain"),
+              "Ouest - Rural" = reactable::colDef(name = "Rural"),
               "Sud - Urbain" = reactable::colDef(name = "Urbain"),
               "Sud - Rural" = reactable::colDef(name = "Rural"),
               "Sud Est - Urbain" = reactable::colDef(name = "Urbain"),
@@ -322,10 +313,11 @@ mod_indicator_main_server <- function(id) {
               colGroup(name = "Artibonite", columns = c("Artibonite - Rural", "Artibonite - Urbain")),
               colGroup(name = "Centre", columns = c("Centre - Rural", "Centre - Urbain")),
               colGroup(name = "Grand'Anse", columns = c("Grand'Anse - Rural", "Grand'Anse - Urbain")),
+              colGroup(name = "Ouest", columns = c("Ouest - Rural", "Ouest - Urbain")),
               colGroup(name = "Nippes", columns = c("Nippes - Rural", "Nippes - Urbain")),
+              colGroup(name = "Nord", columns = c("Nord - Rural", "Nord - Urbain")),
               colGroup(name = "Nord Est", columns = c("Nord Est - Rural", "Nord Est - Urbain")),
               colGroup(name = "Nord Ouest", columns = c("Nord Ouest - Rural", "Nord Ouest - Urbain")),
-              colGroup(name = "Nord", columns = c("Nord - Rural", "Nord - Urbain")),
               colGroup(name = "Sud", columns = c("Sud - Rural", "Sud - Urbain")),
               colGroup(name = "Sud Est", columns = c("Sud Est - Rural", "Sud Est - Urbain"))
             ),
