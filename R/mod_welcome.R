@@ -70,6 +70,7 @@ mod_welcome_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+
     #------ Colors
     white <- visualizeR::cols_reach("white")
     red_pal <- visualizeR::pal_reach("red_alt", reverse = TRUE)
@@ -82,11 +83,9 @@ mod_welcome_server <- function(id) {
     admin0_border <- HTI.MSNA.2022::hti_admin0_border
 
     #----- Spatial data
-    admin1_polygon <- HTI.MSNA.2022::hti_admin1_polygon |>
-      dplyr::mutate(admin1 = stringr::str_replace_all(stringr::str_to_lower(departemen), " |-|'", "_")) |>
-      dplyr::mutate(admin1 = ifelse(admin1 == "grande_anse", "grand_anse", admin1))
+    admin1_polygon <-  HTI.MSNA.2022::hti_admin1_polygon
 
-    admin1_line <- HTI.MSNA.2022::hti_admin1_line
+    admin1_line <-  HTI.MSNA.2022::hti_admin1_line
 
     admin1_centroid <- admin1_line |>
       sf::st_point_on_surface()
@@ -117,8 +116,8 @@ mod_welcome_server <- function(id) {
 
     #------ Map
 
+    output$map <- leaflet::renderLeaflet({
 
-    choice_map <- shiny::reactive({
       label_stratum <- sprintf(
         "<div class ='leaflet-hover'>
         <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
@@ -161,7 +160,7 @@ mod_welcome_server <- function(id) {
 
         #------ Providers
         leaflet::addProviderTiles(leaflet::providers$CartoDB.PositronNoLabels,
-          options = leaflet::providerTileOptions(opacity = 0.5)
+                                  options = leaflet::providerTileOptions(opacity = 0.5)
         ) |>
         #------ Polygons
         leaflet::addPolygons(
@@ -248,11 +247,10 @@ mod_welcome_server <- function(id) {
           title = "Milieu"
         ) |>
         leaflet::addScaleBar(position = "bottomleft", leaflet::scaleBarOptions(imperial = FALSE))
+
+      # HTI.MSNA.2022::welcome_map
     })
 
-    output$map <- leaflet::renderLeaflet({
-      choice_map()
-    })
   })
 }
 ## To be copied in the UI
