@@ -14,6 +14,38 @@
   top: 5px;
 }
 
+
+/* sub-tabs */
+.nav li a {
+  color: white !important;
+  background-color: #58585A !important;
+  font-size:13px;
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
+}
+
+/* tabs on hover */
+.nav li a:hover {
+  color: dark !important;
+  border-bottom: 2px solid #EE5859 !important;
+  border-color: #EE5859;
+}
+
+/* active tabs */
+.nav > .active > a {
+  color: white !important;
+  border-bottom: 2px solid #EE5859 !important;
+  border-color: #EE5859;
+
+}
+
+.nav > .active > a:hover {
+  color: white !important;
+  border-bottom: 2px solid #EE5859 !important;
+  border-color: #EE5859;
+}
+
+.tabbable > .nav > li > a {margin-top:-10px;}
+
 .navbar>.container .navbar-brand, .navbar>.container-fluid .navbar-brand {
   background-color:#58585A;
   color: white;
@@ -153,6 +185,18 @@ h3 {
   opacity: 0.8;
   text-align: justify;
   font-family: "Leelawadee UI", "Leelawadee", sans-serif;
+}
+
+.well-tabset {
+  background-color: #58585A;
+  border-width: 2px;
+  border-color:#EE5859;
+  color: white;
+  font-size: 10px;
+  opacity: 0.8;
+  text-align: justify;
+  font-family: "Leelawadee UI", "Leelawadee", sans-serif;
+  margin-top: 20px;
 }
 
 /* hyperlink */

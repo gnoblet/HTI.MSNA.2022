@@ -111,24 +111,24 @@ mod_map_main_server <- function(id) {
 
 
     #------ Spatial stratum
-    stratum <- HTI.MSNA.2022::hti_stratum |>
+    stratum <- HTI.MSNA.2022::hti_stratum_overall |>
       janitor::clean_names()
 
     stratum_line <- stratum |>
       sf::st_cast("MULTILINESTRING")
 
-    #------ Other data
-    analysis <- HTI.MSNA.2022::data_admin1 |>
-      mutate_if_nulla(choices_label, " ")
-
+    # #------ Other data
+    # analysis <- HTI.MSNA.2022::data_overall_admin1 |>
+    #   mutate_if_nulla(choices_label, " ")
+    #
 
     # Server : data -----------------------------------------------------------
 
     analysis <- reactive({
       switch(input$disagg,
-        "Ensemble" = HTI.MSNA.2022::data_admin1 |>
+        "Ensemble" = HTI.MSNA.2022::data_overall_admin1 |>
           mutate_if_nulla(choices_label, " "),
-        "Rural et urbain" = HTI.MSNA.2022::data_stratum |>
+        "Rural et urbain" = HTI.MSNA.2022::data_overall_stratum |>
           mutate_if_nulla(choices_label, " ")
       )
     })
