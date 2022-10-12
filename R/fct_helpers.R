@@ -386,6 +386,17 @@ admin1_f <- function() {
   )
 }
 
+
+
+#' @noRd
+stratum_zmpap_f <- function() {
+  tibble::tibble(
+    stratum_zmpap = c("zmpap_carrefour", "zmpap_cite_soleil", "zmpap_croix_des_bouquets", "zmpap_delmas", "zmpap_petion_ville", "zmpap_port_au_prince", "zmpap_tabarre", "zmpap_thomazeau"),
+    stratum_zmpap_name = c("Carrefour", "Cite-Soleil", "Croix-des-Bouquets", "Delmas", "Petion-Ville", "Port-au-Prince", "Tabarre", "Thomazeau")
+  )
+}
+
+
 #' @noRd
 milieu_f <- function() {
   tibble::tibble(

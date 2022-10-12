@@ -13,7 +13,7 @@ mod_graph_main_ui <- function(id) {
   shiny::tabPanel(
     title = "Diagramme",
     value = "panel-graph",
-    icon = shiny::icon("chart-bar"),
+      icon = shiny::icon("chart-bar"),
     shiny::fluidRow(
       shiny::sidebarPanel(
         width = 3,
@@ -21,8 +21,8 @@ mod_graph_main_ui <- function(id) {
         shinyWidgets::prettyRadioButtons(
           inputId = ns("disagg"),
           label = "Niveau géographique",
-          choices = c("National (hors ZMPAP)", "Départemental"),
-          selected = "National (hors ZMPAP)",
+          choices = c("National", "Départemental"),
+          selected = "National",
           fill = TRUE,
           status = "danger"
         ),
@@ -95,6 +95,7 @@ mod_graph_main_ui <- function(id) {
 #' @noRd
 mod_graph_main_server <- function(id) {
   moduleServer(id, function(input, output, session) {
+
     ns <- session$ns
 
     #------ Colors
@@ -115,9 +116,9 @@ mod_graph_main_server <- function(id) {
 
     analysis <- reactive({
       switch(input$disagg,
-             "National (hors ZMPAP)" =
+             "National" =
                switch(input$milieu,
-                      "Ensemble" = HTI.MSNA.2022::data_main |>
+                      "Ensemble" = HTI.MSNA.2022::data_overall_all |>
                         mutate_if_nulla(choices_label, " ") |>
                         mutate_if_nulla(stat, 0) |>
                         dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
@@ -126,7 +127,7 @@ mod_graph_main_server <- function(id) {
                           analysis_name == "Médiane" ~ "Médiane",
                           analysis_name == "Proportion" & analysis == "ratio" ~ "Proportion (%)",
                           TRUE ~ choices_label)),
-                      "Rural et urbain" = HTI.MSNA.2022::data_milieu |>
+                      "Rural et urbain" = HTI.MSNA.2022::data_overall_milieu |>
                         mutate_if_nulla(choices_label, " ") |>
                         dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
                         dplyr::mutate(choices_label = dplyr::case_when(
@@ -137,7 +138,7 @@ mod_graph_main_server <- function(id) {
                       ),
              "Départemental" =
                switch(input$milieu,
-                      "Ensemble" = HTI.MSNA.2022::data_admin1 |>
+                      "Ensemble" = HTI.MSNA.2022::data_overall_admin1 |>
                         mutate_if_nulla(choices_label, " ") |>
                         dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
                         dplyr::mutate(choices_label = dplyr::case_when(
@@ -146,7 +147,7 @@ mod_graph_main_server <- function(id) {
                           analysis_name == "Proportion" & analysis == "ratio" ~ "Proportion (%)",
                           TRUE ~ choices_label
                         )),
-                      "Rural et urbain" =  HTI.MSNA.2022::data_stratum |>
+                      "Rural et urbain" =  HTI.MSNA.2022::data_overall_stratum |>
                         mutate_if_nulla(choices_label, " ") |>
                         dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))) |>
                         dplyr::mutate(choices_label = dplyr::case_when(
@@ -194,7 +195,6 @@ mod_graph_main_server <- function(id) {
             sub_rq == input$sub_rq,
             indicator == input$indicator
           ) |>
-          dplyr::arrange(choices_label) |>
           dplyr::pull(choices_label) |>
           unique()
       )
@@ -260,7 +260,7 @@ mod_graph_main_server <- function(id) {
       # plotly::renderPlotly(
       shiny::renderPlot(
         expr = {
-          if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Ensemble") {
+          if (input$disagg == "National" & input$milieu == "Ensemble") {
 
             analysis_filtered <- analysis() |>
               dplyr::filter(
@@ -290,7 +290,7 @@ mod_graph_main_server <- function(id) {
               mutate_if_nulla(stat, 0) |>
               dplyr::arrange(dplyr::desc(stat))
 
-          } else if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Rural et urbain") {
+          } else if (input$disagg == "National" & input$milieu == "Rural et urbain") {
 
             analysis_filtered <- analysis() |>
               dplyr::filter(
@@ -350,7 +350,7 @@ mod_graph_main_server <- function(id) {
               )
             )
           } else {
-            if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Ensemble") {
+            if (input$disagg == "National" & input$milieu == "Ensemble") {
 
               graph <- visualizeR::hbar(
                 .tbl = analysis_filtered |>
@@ -402,7 +402,7 @@ mod_graph_main_server <- function(id) {
                   hjust = 1.5,
                   colour = "white",
                   fontface = "bold")
-            } else if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Rural et urbain") {
+            } else if (input$disagg == "National" & input$milieu == "Rural et urbain") {
               graph <- visualizeR::hbar(
                 .tbl = analysis_filtered |>
                   dplyr::mutate(choices_label = factor(choices_label, levels = unique(analysis_filtered$choices_label))),
@@ -466,7 +466,7 @@ mod_graph_main_server <- function(id) {
 
           if (input$disagg == "Départemental")  graph <- graph + ggplot2::ggtitle(indicator_name(), subtitle = paste("Option de réponse :",  choice_name(), sep = " "))
 
-          if (input$disagg == "National (hors ZMPAP)")  graph <- graph + ggplot2::ggtitle(indicator_name())
+          if (input$disagg == "National")  graph <- graph + ggplot2::ggtitle(indicator_name())
 
           graph <- graph +
             ggplot2::theme(
@@ -484,7 +484,7 @@ mod_graph_main_server <- function(id) {
     shiny::observeEvent(input$download_graph, {
       shinyscreenshot::screenshot(
         id = "graph",
-        filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National (hors ZMPAP)", paste0(" - ", input$choice), ""))
+        filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National", paste0(" - ", input$choice), ""))
       )
     })
   })

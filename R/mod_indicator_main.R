@@ -22,8 +22,8 @@ mod_indicator_main_ui <- function(id) {
         shinyWidgets::prettyRadioButtons(
           inputId = ns("disagg"),
           label = "Niveau géographique",
-          choices = c("National (hors ZMPAP)", "Départemental"),
-          selected = "National (hors ZMPAP)",
+          choices = c("National", "Départemental"),
+          selected = "National",
           fill = TRUE,
           status = "danger"
         ),
@@ -95,13 +95,13 @@ mod_indicator_main_server <- function(id) {
 
     analysis <- reactive({
       switch(input$disagg,
-        "National (hors ZMPAP)" =
+        "National" =
           switch(input$milieu,
-            "Ensemble" = HTI.MSNA.2022::data_main |>
+            "Ensemble" = HTI.MSNA.2022::data_overall_all |>
               mutate_if_nulla(choices_label, " ") |>
               mutate_if_nulla(stat, 0) |>
               dplyr::mutate(stat = ifelse(analysis_name == "Proportion", round(stat * 100, 0), round(stat, 1))),
-            "Rural et urbain" = HTI.MSNA.2022::data_milieu |>
+            "Rural et urbain" = HTI.MSNA.2022::data_overall_milieu |>
               mutate_if_nulla(choices_label, " ") |>
               dplyr::distinct(id_analysis, choices_label, group_disagg_label, .keep_all = T) |>
               tidyr::pivot_wider(
@@ -124,7 +124,7 @@ mod_indicator_main_server <- function(id) {
           ),
         "Départemental" =
           switch(input$milieu,
-            "Ensemble" = HTI.MSNA.2022::data_admin1 |>
+            "Ensemble" = HTI.MSNA.2022::data_overall_admin1 |>
               mutate_if_nulla(choices_label, " ") |>
               dplyr::distinct(id_analysis, choices_label, group_disagg_label, .keep_all = T) |>
               tidyr::pivot_wider(
@@ -144,7 +144,7 @@ mod_indicator_main_server <- function(id) {
                   \(x) ifelse(analysis_name == "Proportion", round(x * 100, 0), round(x, 1))
                 )
               ),
-            "Rural et urbain" = HTI.MSNA.2022::data_stratum |>
+            "Rural et urbain" = HTI.MSNA.2022::data_overall_stratum |>
               mutate_if_nulla(choices_label, " ") |>
               dplyr::distinct(id_analysis, choices_label, group_disagg_label, .keep_all = T) |>
               tidyr::pivot_wider(
@@ -254,10 +254,10 @@ mod_indicator_main_server <- function(id) {
         "Le tableau se met à jour."
       ))
 
-      if (input$disagg == "National (hors ZMPAP)" & input$milieu == "Ensemble") {
+      if (input$disagg == "National" & input$milieu == "Ensemble") {
         filtered <- analysis_filtered |>
           dplyr::select("Type d'analyse" = analysis_name, choices_label, "Statistique" = stat)
-      } else if (input$disagg == "Départemental" & input$milieu == "Ensemble" | (input$disagg == "National (hors ZMPAP)" & input$milieu == "Rural et urbain")) {
+      } else if (input$disagg == "Départemental" & input$milieu == "Ensemble" | (input$disagg == "National" & input$milieu == "Rural et urbain")) {
         filtered <- analysis_filtered |>
           impactR::deselect(id_analysis, rq, sub_rq, choices, recall, subset, indicator, analysis_name)
       } else if (input$disagg == "Départemental" & input$milieu == "Rural et urbain") {

@@ -28,11 +28,12 @@ app_ui <- function(request) {
     #       HTML('<link rel="icon" href="www/reach_logo.png"
     #             type="image/png" />')))),
     shiny::navbarPage(
-      title = "HTI - MSNA 2022 - Résultats préliminaires",
+      title = "HTI - MSNA 2022 - Indicateurs",
       mod_welcome_ui("welcome_1"),
       mod_indicator_main_ui("indicator_main_1"),
       mod_graph_main_ui("graph_main_1"),
       mod_map_main_ui("map_main_1"),
+      mod_zmpap_ui("zmpap_1"),
       mod_apropos_ui("apropos_1")
       # )
     )
