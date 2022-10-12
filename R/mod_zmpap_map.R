@@ -98,7 +98,7 @@ mod_zmpap_map_server <- function(id){
     stratum_centroid <- stratum_zmpap_spatial |>
       sf::st_centroid()
 
-    stratum_line <- stratum_zmpap |>
+    stratum_line <- stratum_zmpap_spatial |>
       sf::st_cast("MULTILINESTRING")
 
     stratum_labels_halo <- sprintf(
