@@ -11,11 +11,9 @@ mod_zmpap_map_ui <- function(id){
   ns <- NS(id)
 
   shiny::fluidPage(
-    # class = "outer",
     shiny::fluidRow(
       leaflet::leafletOutput(ns("map"), height = "650px")
-    )
-    ,
+    ),
     shiny::absolutePanel(
       fixed = TRUE,
       draggable = FALSE,

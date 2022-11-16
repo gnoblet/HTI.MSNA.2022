@@ -117,10 +117,7 @@ mod_map_main_server <- function(id) {
     stratum_line <- stratum |>
       sf::st_cast("MULTILINESTRING")
 
-    # #------ Other data
-    # analysis <- HTI.MSNA.2022::data_overall_admin1 |>
-    #   mutate_if_nulla(choices_label, " ")
-    #
+
 
     # Server : data -----------------------------------------------------------
 
