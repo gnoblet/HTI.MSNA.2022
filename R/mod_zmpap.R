@@ -14,6 +14,11 @@ mod_zmpap_ui <- function(id){
         icon = shiny::icon("city"),
         shiny::tabsetPanel(
           shiny::tabPanel(
+            icon = shiny::icon("flag"),
+            title = "Introduction",
+            mod_zmpap_welcome_ui(ns("zmpap_welcome_1"))
+          ),
+          shiny::tabPanel(
             icon = shiny::icon("table"),
             title = "Tableau",
             mod_zmpap_indicator_ui(ns("zmpap_indicator_1"))
@@ -38,10 +43,10 @@ mod_zmpap_ui <- function(id){
 mod_zmpap_server <- function(id){
   moduleServer( id, function(input, output, session){
     ns <- session$ns
+    mod_zmpap_welcome_server("zmpap_welcome_1")
     mod_zmpap_indicator_server("zmpap_indicator_1")
     mod_zmpap_graph_server("zmpap_graph_1")
     mod_zmpap_map_server("zmpap_map_1")
-
   })
 }
 

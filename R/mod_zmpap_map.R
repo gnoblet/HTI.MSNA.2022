@@ -11,11 +11,9 @@ mod_zmpap_map_ui <- function(id){
   ns <- NS(id)
 
   shiny::fluidPage(
-    # class = "outer",
     shiny::fluidRow(
       leaflet::leafletOutput(ns("map"), height = "650px")
-    )
-    ,
+    ),
     shiny::absolutePanel(
       fixed = TRUE,
       draggable = FALSE,
@@ -98,7 +96,7 @@ mod_zmpap_map_server <- function(id){
     stratum_centroid <- stratum_zmpap_spatial |>
       sf::st_centroid()
 
-    stratum_line <- stratum_zmpap |>
+    stratum_line <- stratum_zmpap_spatial |>
       sf::st_cast("MULTILINESTRING")
 
     stratum_labels_halo <- sprintf(

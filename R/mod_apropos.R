@@ -21,17 +21,18 @@ mod_apropos_ui <- function(id) {
         shiny::fluidRow(
           shiny::wellPanel(
             shiny::h2("Téléchargement, informations complétementaires et contacts"),
-            shiny::p(" Si vous souhaitez de plus amples informations sur les objectifs de la recherche et la méthodologie, les termes de référence de l'évaluation sont disponibles ", shiny::tags$a("ici.", class = "a", href = "https://www.impact-repository.org/document/reach/dc728cf9/REACH_HTI_tor_MSNA-2022-1.pdf"), "Le questionnaire a été mis au point avec les partenaires sectoriels et les groupes de travail thématiques au sein de la coordination humanitaire d'Haïti. Il est traduit en créole haïtien. Le questionnaire est disponible ", shiny::tags$a("ici.", class = "a", href = "https://www.impact-repository.org/document/reach/b2448f66/REACH_HTI_dap_MSNA-2022-1-1.xlsx"), "Si vous souhaitez des analyses complémentaires ou plus d'informations, vous pouvez contacter", shiny::tags$a("guillaume.noblet@reach-initiative.org", class = "a", href = "mailto:guillaume.noblet@reach-initiative.org")),
-            shiny::p("Le jeu de données est disponible sur le", shiny::tags$a("REACH Resource Center", class = "a", href = "https://www.impact-repository.org/document/reach/60f94a18/REACH_HTI_dataset_without-West_MSNA-2022.xlsx"), ". L'intégralité des résultats des analyses présentées dans le tableau de bord sont accessibles sur demande.")
-          )
-        ),
+            shiny::p("Si vous souhaitez de plus amples informations sur les objectifs de la recherche, la couverture géographique et la méthodologie, l'annexe méthodologique de l'évaluation est disponible ", shiny::tags$a("ici.", class = "a", href = "https://www.impact-repository.org/document/reach/ba3c68fc/REACH_HTI_methodological-overview_MSNA-2022.pdf")),
+            shiny::p("Le questionnaire a été mis au point avec les partenaires sectoriels et les groupes de travail thématiques au sein de la coordination humanitaire d'Haïti. Il est traduit en créole haïtien. Le questionnaire est disponible ", shiny::tags$a("ici.", class = "a", href = "https://www.impact-repository.org/document/reach/b2448f66/REACH_HTI_dap_MSNA-2022-1-1.xlsx")),
+            shiny::p("L'ensemble des publications liées à l'évaluation peuvent être trouvées sur le ", shiny::tags$a("REACH Resource Center", class = "a", href = "https://www.reachresourcecentre.info/country/haiti/cycle/48772/?toip-group=publications&toip=methodology-tool#cycle-48772"), "."),
+            shiny::p("Si vous souhaitez des analyses complémentaires ou plus d'informations, vous pouvez contacter", shiny::tags$a("guillaume.noblet@reach-initiative.org", class = "a", href = "mailto:guillaume.noblet@reach-initiative.org"))
+        )),
         shiny::fluidRow(
           shiny::wellPanel(
             shiny::h2("Méhodologie"),
             shiny::p("Trois groupes de population ont été identifiés comme prioritaires dans le cadre de la MSNA – la population générale et les populations déplacées et rapatriées enregistrées auprès de l’OIM. Les trois groupes sont les suivants :"),
             reactable::reactableOutput(ns("table_group_pop")),
             shiny::br(),
-            shiny::p("REACH Initiative a effectué la collecte pour les ménages en population générale. La collecte de données a eu lieu du 12 juin au 13 septembre. 3896 ménages ont participé à l'enquête, dont 1188 dans la Zone métropolitaine de Port-au-Prince. Les entretiens ont été effectués en personne. L'échantillon est stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural, soit urbain), et au niveau des communes pour la Zone métropolitaine de Port-au-Prince. L'échantillon n'a pas pu être complété pour le département de l'Ouest en zone rurale du fait des contraintes sécuritaires de septembre 2022, les résultats sont donc à considérer comme indicatifs. Pour les populations déplacées et rapatriées, les données ont été collectées par l'OIM.")
+            shiny::p("REACH Initiative a effectué la collecte pour les ménages en population générale. La collecte de données a eu lieu du 12 juin au 13 septembre 2022. 3896 ménages ont participé à l'enquête, dont 1188 dans la Zone métropolitaine de Port-au-Prince. Les entretiens ont été effectués en personne. L'échantillon est stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural, soit urbain), et au niveau des communes pour la Zone métropolitaine de Port-au-Prince. L'échantillon n'a pas pu être complété pour le département de l'Ouest en zone rurale du fait des contraintes sécuritaires de septembre 2022, les résultats sont donc à considérer comme indicatifs. Pour les populations déplacées et rapatriées, les données ont été collectées par l'OIM.")
           )
         )
       ),
@@ -47,11 +48,12 @@ mod_apropos_ui <- function(id) {
               tags$li(shiny::strong("Biais de réponse :"), "certains indicateurs comme la non-satisfaction du comportement des travailleurs humanitaires, l’enrôlement des enfants dans les groupes armées, les incidents graves de protection ou les violences basées sur le genre peuvent avoir été sous-rapportés en fonction de la sensibilité de la question et de la subjectivité et de la perception des personnes interrogées."),
               tags$li(shiny::strong("Sous-ensembles :"), "les résultats faisant référence à un sous-ensemble de la population totale peuvent avoir une marge d’erreur plus grande, ce qui peut induire un niveau de précision plus bas. Ainsi, les résultats relatifs à des sous-ensembles de la population sont indiqués comme tels chaque fois qu'ils sont déclarés."),
               tags$li(shiny::strong("Limites des entretiens avec le chef ou la cheffe de ménage :"), "comme le ménage est l’unité d’analyse, les dynamiques au sein des ménages (par exemple les relations de pouvoir au sein du ménage en fonction du genre, de l’âge ou du handicap) ne peuvent être appréhendées. REACH vous encourage à consulter d’autres sources de données afin de compléter résultats du MSNA."),
-              tags$li(shiny::strong("Période de collecte de données :"), "pour l’interprétation des résultats, notamment de sécurité alimentaire en fonction des différentes zones agro-écologiques, la période de collecte de données pour chaque département est précisée sur la carte de couverture.")
-            )),
-            shiny::p("Les limites seront présentées de manière plus détaillée dans l'annexe méthodologique (à venir).")
-          )
-      ),
+              tags$li(shiny::strong("Période de collecte de données :"), "pour l’interprétation des résultats, notamment de sécurité alimentaire en fonction des différentes zones agro-écologiques, la période de collecte de données pour chaque département est précisée sur la carte de couverture."),
+              tags$li(shiny::strong("Zones exclues de l'échantillon :"), "Du fait de contraintes d'accès sécuritaire et des mouvements sociaux du mois de septembre 2022, l'échantillon pour la strate 'Ouest - Rural' n'a pas pu être complété et les résultats doivent être considérés comme indicatifs. Pour la Zone métropolitaine, certaines zones de Croix-des-Bouquets (en particulier, la section communale de 1er Petit Bois) et de Pétion-Ville (autour de Pernier et de Torcel) ont été retirées de l'échantillonnage. Les résultats restent représentatifs avec l'exclusion de ces zones.  Pour plus d'informations sur les zones exclues de l'échantillon, voir l'Annexe méthodologique."),
+            tags$li(shiny::strong("Entrelacement des hexagones :"), "pour l'échantillon de la Zone métropolitaine de Port-au-Prince, la maille des hexagones d' un kilomètre de côté chevauchait parfois les frontières des communes. Les entretiens ont été recodés dans la 'vraie' commune au sens du point géographique de l'entretien. Cependant, ce chevauchement a pu entrainer quelques différences pour les pondérations de population. ")
+            )
+          ))
+        ),
       shiny::fluidRow(
         class = "fluid-row-padding",
         shiny::wellPanel(
@@ -66,8 +68,8 @@ mod_apropos_ui <- function(id) {
             )
           )
           )
-        )
-    ),
+      )
+      ),
     shiny::fluidRow(
       class = "fluid-row-padding",
       shiny::column(
@@ -81,7 +83,7 @@ mod_apropos_ui <- function(id) {
           ),
           shiny::column(
             6,
-            shiny::img(src = "www/GCIS.png", height = "50px")
+            shiny::img(src = "www/GCIS.png", height = "60px")
           )
         )
       ),
@@ -92,11 +94,11 @@ mod_apropos_ui <- function(id) {
           shiny::h2("Financé par :"),
           shiny::column(
             6,
-            shiny::img(src = "www/USAID.png", height = "50px")
+            shiny::img(src = "www/USAID.png", height = "60px")
           ),
           shiny::column(
             6,
-            shiny::img(src = "www/ECHO.png", height = "50px")
+            shiny::img(src = "www/ECHO.png", height = "60px")
           )
         ),
         shiny::fluidRow(
@@ -104,7 +106,7 @@ mod_apropos_ui <- function(id) {
           shiny::h2(" "),
           shiny::column(
             6,
-            shiny::img(src = "www/WFP.png", height = "50px")
+            shiny::img(src = "www/WFP.png", height = "60px")
             ),
           shiny::column(
             6,
@@ -128,12 +130,12 @@ mod_apropos_ui <- function(id) {
 
           shiny::column(
             6,
-            shiny::img(src = "www/WFP.png", height = "50px")
+            shiny::img(src = "www/WFP.png", height = "60px")
           ),
 
           shiny::column(
             6,
-            shiny::img(src = "www/CRS.png", height = "50px")
+            shiny::img(src = "www/CRS.png", height = "60px")
           )
         ),
         shiny::fluidRow(
@@ -154,11 +156,23 @@ mod_apropos_ui <- function(id) {
           shiny::h2(" "),
           shiny::column(
             6,
-            shiny::img(src = "www/FLOWMINDER_blue.png", height = "32px")
+            shiny::img(src = "www/FLOWMINDER_blue.png", height = "35px")
           ),
           shiny::column(
             6,
             shiny::img(src = "www/WORLDVISION.png", height = "50px")
+          )
+        ),
+        shiny::fluidRow(
+          class = "fluid-row-padding",
+          shiny::h2(" "),
+          shiny::column(
+            6,
+            shiny::img(src = "www/ANACAONA.png", height = "120px")
+          ),
+          shiny::column(
+            6,
+            shiny::img(src = "www/ORRAH.png", height = "100px")
           )
         )
       )

@@ -60,7 +60,6 @@ mod_indicator_main_ui <- function(id) {
         width = 9,
         shiny::h3(shiny::textOutput(ns("indicator_name"))),
         reactable::reactableOutput(ns("table"), width = "auto", height = "80%")
-        # shiny::uiOutput(ns("table_ui"))
       )
     ),
     shiny::fluidRow(
@@ -363,9 +362,6 @@ mod_indicator_main_server <- function(id) {
           )
 
         }
-#
-#       rctbl <- rctbl |>
-#         reactablefmtr::add_title(indicator_name(), font_weight = "bold")
 
       return(rctbl)
     })

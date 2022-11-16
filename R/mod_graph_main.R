@@ -59,35 +59,27 @@ mod_graph_main_ui <- function(id) {
             choices = "Abris / logement / habitat"
           )
         ),
-        # shiny::hr(),
         shiny::p(shiny::htmlOutput(ns("infobox")))
       ),
       shiny::mainPanel(
         fixed = TRUE,
         draggable = FALSE,
         width = 9,
-        # shiny::h3(shiny::textOutput(ns("indicator_name"))),
         shiny::plotOutput(ns("graph"), width = "80%", height = "700px") #
       )
     ),
     shiny::fluidRow(
       shiny::fixedPanel(
         id = "reach-logo-graph",
-        # fixed = TRUE,
         opacity = 0.8,
         draggable = F,
-        # bottom = "7%",
-        # top = "93%",
         left = "auto",
         right = 30,
-        # width = 400,
-
         shiny::img(src = "www/reach_logo.png", height = "40px", align = "left")
       )
     )
   )
 
-  # actionButton(ns("download_graph"), icon = shiny::icon("download"), "Télécharger le graphique")
 }
 
 #' graph_main Server Functions
@@ -104,15 +96,6 @@ mod_graph_main_server <- function(id) {
     main_red <- visualizeR::cols_reach("main_red")
     main_grey <- visualizeR::cols_reach("main_grey")
     main_lt_grey <- visualizeR::cols_reach("main_lt_grey")
-
-    #------ Plotly things
-    # download_button <- list(
-    #   name = "Télécharger le graphique en svg",
-    #   icon = shiny::icon("download"),
-    #   click = htmlwidgets::JS(
-    #     "function(gd) {window.open('http://www.mastercard.com', '_blank')}"
-    #   )
-    # )
 
     analysis <- reactive({
       switch(input$disagg,

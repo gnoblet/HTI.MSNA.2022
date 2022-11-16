@@ -24,7 +24,7 @@ mod_welcome_ui <- function(id) {
         top = 90,
         left = 30,
         right = "auto",
-        width = 350,
+        width = 320,
         shiny::h2("Présentation du projet"),
         shiny::p("La nature multiforme de la crise en Haïti explique que la coordination humanitaire estime à 4,9 millions le nombre de personnes dans le besoin en 2022. Tandis que l’accès humanitaire représente un obstacle de plus en plus tangible à la collecte d’information, en raison du caractère enclavé de certaines zones et du contexte sécuritaire volatile, les données disponibles sont généralement spécifiques à une intervention, un lieu ou un secteur."),
         shiny::p("Afin de répondre à ces défis en termes de gestion de l’information, REACH, sous le mandat du GCIS a facilité pour la première fois en Haïti une Evaluation multisectorielle des besoins (MSNA) qui couvre l'ensemble du territoire afin d'informer le Cycle de programmation humanitaire (HPC) 2023."),
@@ -39,26 +39,14 @@ mod_welcome_ui <- function(id) {
         top = 90,
         left = "auto",
         right = 30,
-        width = 350,
+        width = 320,
         shiny::h2("Méhodologie"),
-        shiny::p("La collecte de données a eu lieu du 12 juin au 13 septembre. 3896 ménages ont participé à l'enquête, dont 1188 dans la Zone métropolitaine de Port-au-Prince. Les entretiens ont été effectués en personne."),
+        shiny::p("La collecte de données a eu lieu du 12 juin au 13 septembre 2022. 3896 ménages ont participé à l'enquête, dont 1188 dans la Zone métropolitaine de Port-au-Prince. Les entretiens ont été effectués en personne."),
         shiny::p("REACH Initiative a effectué la collecte pour les ménages en population générale. L'échantillon est stratifié par grappes avec un niveau de confiance de 95% et une marge d'erreur de 10%. Les données sont disponibles au niveau des départements et des milieux (soit rural, soit urbain), et au niveau des communes pour la Zone métropolitaine de Port-au-Prince. L'échantillon n'a pas pu être complété pour le département de l'Ouest en zone rurale du fait des contraintes sécuritaires de septembre 2022, les résultats sont donc à considérer comme indicatifs. Pour les populations déplacées et rapatriées, les données ont été collectées par l'OIM."),
         shiny::p("Le questionnaire a été mis au point avec les partenaires sectoriels et les groupes de travail thématiques. Il est traduit en créole haïtien. Le questionnaire est disponible ", shiny::tags$a("ici.", href = "https://www.impact-repository.org/document/reach/b2448f66/REACH_HTI_dap_MSNA-2022-1-1.xlsx")),
         shiny::p("Pour plus d'informations, voir l'onglet", shiny::tags$em("A propos."))
       )
     )
-    # ,
-    # shiny::absolutePanel(
-    #   id = "reach-logo",
-    #   #class = "well",
-    #   fixed = TRUE,
-    #   draggable = F,
-    #   top = 1000,
-    #   left = 30,
-    #   right = "auto",
-    #   width = 350,
-    #   shiny::img(src = "www/reach_logo.png", width = "80%", align = "right")
-    # )
   )
 }
 
@@ -101,7 +89,8 @@ mod_welcome_server <- function(id) {
 
     stratum_zmpap <- HTI.MSNA.2022::hti_stratum_zmpap |>
       janitor::clean_names() |>
-      dplyr::filter(commune != "Gressier")
+      dplyr::filter(commune != "Gressier") |>
+      dplyr::mutate(milieu = "ZMPAP")
 
 
     #------ Basic info : overall
@@ -160,12 +149,14 @@ mod_welcome_server <- function(id) {
 
       label_stratum_zmpap <- sprintf(
         "<div class ='leaflet-hover'>
+        <span style = 'font-size: 18px; color: %s; font-weight: bold;'> ZMPAP </span><br>
         <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
         <span style = 'font-size: 18px; color: %s; font-weight: bold;'> %s </span><br>
         <span style = 'font-size: 14px; color: %s;'> <strong>  Nombre d'entretiens : </strong> %s </span><br>
         <span style = 'font-size: 14px; color: %s;'> <strong>  Dates de collecte : </strong>  %s - %s </span><br>
         </div>
         ",
+        main_red,
         main_grey,
         stratum_zmpap$stratum,
         main_red,
@@ -327,10 +318,8 @@ mod_welcome_server <- function(id) {
           values = ~milieu,
           na.label = "Données manquantes",
           title = "Milieu"
-        ) |>
-        leaflet::addScaleBar(position = "bottomleft", leaflet::scaleBarOptions(imperial = FALSE))
+        )
 
-      # HTI.MSNA.2022::welcome_map
     })
 
   })
