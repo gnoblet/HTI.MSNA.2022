@@ -8,7 +8,9 @@ pkgs <- c(
   "reactable",
   "impactR",
   "visualizeR",
-  "ggblanket"
+  "shinyscreenshot",
+  "ggplot2",
+  "forcats"
 )
 
 for (i in pkgs) {

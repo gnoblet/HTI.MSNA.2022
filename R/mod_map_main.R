@@ -445,7 +445,7 @@ mod_map_main_server <- function(id) {
             textOnly = TRUE,
             style = list(
               "padding"     = "3px 8px",
-              "font-family" = "Leelawadee UI",
+              "font-family" = "Leelawadee UI, Leelawadee",
               "text-shadow" = sprintf("-0.8px 0 %s, 0 0.8px %s, 0.8px 0 %s, 0 -0.8px %s, 0 0 7px %s", white, white, white, white, white)
             )
           )

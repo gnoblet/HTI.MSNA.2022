@@ -78,7 +78,7 @@ mod_welcome_server <- function(id) {
       sf::st_point_on_surface()
 
     admin1_labels_halo <- sprintf(
-      '<strong><span style="font-size: 18px; color: %s">%s</span></strong>',
+      '<strong><span style="font-size: 15px; color: %s">%s</span></strong>',
       main_grey, admin1_centroid$ADM1_FR
     ) |>
       lapply(htmltools::HTML)
@@ -304,7 +304,7 @@ mod_welcome_server <- function(id) {
             textOnly = TRUE,
             style = list(
               "padding"     = "3px 8px",
-              "font-family" = "Leelawadee UI",
+              "font-family" = "Leelawadee UI, Leelawadee",
               "text-shadow" = sprintf("-0.8px 0 %s, 0 0.8px %s, 0.8px 0 %s, 0 -0.8px %s, 0 0 7px %s", white, white, white, white, white)
             )
           )

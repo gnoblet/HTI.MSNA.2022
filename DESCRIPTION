@@ -22,20 +22,17 @@ Imports:
     bslib,
     devtools,
     pins,
-    ggblanket,
     visualizeR,
     leaflet,
     sf,
     plotly,
     reactable,
-    shinyscreenshot
-Suggests: 
-    spelling,
-    testthat (>= 3.0.0)
-Config/testthat/edition: 3
+    shinyscreenshot,
+    ggplot2,
+    forcats
 Encoding: UTF-8
-Language: en-US
+Language: fr-FR
 LazyData: true
 RoxygenNote: 7.2.0
 Depends: 
-    R (>= 2.10)
+    R (>= 4.1)

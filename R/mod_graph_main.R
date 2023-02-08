@@ -60,6 +60,7 @@ mod_graph_main_ui <- function(id) {
           )
         ),
         shiny::p(shiny::htmlOutput(ns("infobox")))
+        # shiny::downloadButton(ns("download_graph"), "Télécharger le diagramme", style = "font-size: 11px")
       ),
       shiny::mainPanel(
         fixed = TRUE,
@@ -318,66 +319,55 @@ mod_graph_main_server <- function(id) {
 
 
           if (nrow(analysis_filtered) == 0) {
-            graph <- visualizeR::hbar(
-              .tbl = tibble::tibble(stat = 100, choices_label = "Missing data"),
-              x = stat,
-              y = choices_label,
-              reverse = TRUE,
-              gg_theme = ggblanket::gg_theme(
-                font = "Leelawadee UI",
-                body_size = 10,
-                title_size = 14,
-                bg_plot_pal = "#FFFFFF",
-                bg_panel_pal = "#FFFFFF",
-                grid_v = TRUE
+            graph <- visualizeR::bar(
+              df = tibble::tibble(stat = 100, choices_label = "Données manquantes"),
+              x = choices_label,
+              y = stat,
+              theme = visualizeR::theme_reach(
+                font = "Leelawadee",
+                text_size = 12,
+                title_size = 12,
+                panel_background_color = "#FFFFFF",
+                grid_y = TRUE,
+                text_font_face = "plain"
               )
             )
           } else {
             if (input$disagg == "National" & input$milieu == "Ensemble") {
 
-              graph <- visualizeR::hbar(
-                .tbl = analysis_filtered |>
-                  dplyr::mutate(choices_label = factor(choices_label, levels = unique(analysis_filtered$choices_label))),
-                x = stat,
-                y = choices_label,
-                reverse = TRUE,
-                gg_theme = ggblanket::gg_theme(
-                  font = "Leelawadee UI",
-                  body_size = 10,
-                  title_size = 14,
-                  subtitle_size = 13,
-                  bg_plot_pal = "#FFFFFF",
-                  bg_panel_pal = "#FFFFFF",
-                  grid_v = TRUE
-                )) +
-                  ggplot2::geom_text(
-                    ggplot2::aes(
-                      label = stat,
-                      group = group_disagg_label),
-                    hjust = 1.5,
-                    colour = "white",
-                    fontface = "bold",
-                    position = ggplot2::position_dodge(width = 0.8))
-                ggplot2::scale_y_discrete(labels = scales::label_wrap(70))
+              graph <- visualizeR::bar(
+                df = analysis_filtered,
+                x = forcats::fct_reorder(choices_label, stat),
+                y = stat,
+                add_text = TRUE,
+                percent = FALSE,
+                theme = visualizeR::theme_reach(
+                  font = "Leelawadee",
+                  text_size = 12,
+                  title_size = 13,
+                  panel_background_color = "#FFFFFF",
+                  grid_x = TRUE,
+                  palette = "primary",
+                  text_font_face = "plain")
+              ) +
+                ggplot2::scale_x_discrete(labels = scales::label_wrap(70))
 
             } else if (input$disagg == "Départemental" & input$milieu == "Ensemble") {
-              graph <- visualizeR::hbar(
-                .tbl = analysis_filtered |>
-                  dplyr::mutate(group_disagg_label = factor(group_disagg_label, levels = unique(analysis_filtered$group_disagg_label))),
-                x = stat,
-                y = group_disagg_label,
-                width = 0.4,
-                reverse = TRUE,
-                position = ggplot2::position_dodge(width = 0.2),
-                gg_theme = ggblanket::gg_theme(
-                  font = "Leelawadee UI",
-                  body_size = 10,
-                  title_size = 14,
-                  subtitle_size = 13,
-                  bg_plot_pal = "#FFFFFF",
-                  bg_panel_pal = "#FFFFFF",
-                  grid_v = TRUE
-                )
+
+              graph <- visualizeR::bar(
+                df = analysis_filtered,
+                x = forcats::fct_reorder(group_disagg_label, stat),
+                y = stat,
+                add_text = TRUE,
+                percent = FALSE,
+                theme = visualizeR::theme_reach(
+                  font = "Leelawadee",
+                  text_size = 12,
+                  title_size = 13,
+                  panel_background_color = "#FFFFFF",
+                  grid_x = TRUE,
+                  palette = "primary",
+                  text_font_face = "plain")
               ) +
                 ggplot2::geom_text(
                   ggplot2::aes(
@@ -386,63 +376,46 @@ mod_graph_main_server <- function(id) {
                   colour = "white",
                   fontface = "bold")
             } else if (input$disagg == "National" & input$milieu == "Rural et urbain") {
-              graph <- visualizeR::hbar(
-                .tbl = analysis_filtered |>
-                  dplyr::mutate(choices_label = factor(choices_label, levels = unique(analysis_filtered$choices_label))),
-                x = stat,
-                y = choices_label,
+
+              graph <- visualizeR::bar(
+                df = analysis_filtered ,
+                x = forcats::fct_reorder(choices_label, stat),
+                y = stat,
                 group = group_disagg_label,
-                group_title = "Milieu",
-                width = 0.8,
-                reverse = TRUE,
-                gg_theme = ggblanket::gg_theme(
-                  font = "Leelawadee UI",
-                  body_size = 10,
-                  title_size = 14,
-                  subtitle_size = 13,
-                  bg_plot_pal = "#FFFFFF",
-                  bg_panel_pal = "#FFFFFF",
-                  grid_v = TRUE
-                )) +
-                  ggplot2::geom_text(
-                    ggplot2::aes(
-                      label = stat,
-                      group = group_disagg_label),
-                    hjust = 1.5,
-                    colour = "white",
-                    fontface = "bold",
-                    position = ggplot2::position_dodge(width = 0.8)) +
-                ggplot2::scale_y_discrete(labels = scales::label_wrap(70))
+                group_title = "Milye",
+                add_text = TRUE,
+                percent = FALSE,
+                theme = visualizeR::theme_reach(
+                  font = "Leelawadee",
+                  text_size = 12,
+                  title_size = 13,
+                  panel_background_color = "#FFFFFF",
+                  grid_x = TRUE,
+                  palette = "primary",
+                  text_font_face = "plain")
+              ) +
+                ggplot2::scale_x_discrete(labels = scales::label_wrap(70))
 
             } else if (input$disagg == "Départemental" & input$milieu == "Rural et urbain") {
-              graph <- visualizeR::hbar(
-                .tbl = analysis_filtered |>
-                  dplyr::mutate(admin1 = factor(admin1, levels = unique(analysis_filtered$admin1))) |>
-                  ggblanket::add_tooltip_text(stat, admin1, milieu),
-                x = stat,
-                y = admin1,
+
+              graph <- visualizeR::bar(
+                df = analysis_filtered,
+                x = forcats::fct_reorder(admin1, stat),
+                y = stat,
                 group = milieu,
-                group_title = "Milieu",
-                reverse = TRUE,
-                gg_theme = ggblanket::gg_theme(
-                  font = "Leelawadee UI",
-                  body_size = 11,
-                  title_size = 16,
-                  subtitle_size = 15,
-                  bg_plot_pal = "#FFFFFF",
-                  bg_panel_pal = "#FFFFFF",
-                  grid_v = TRUE
-                ),
-                width = 0.8
+                group_title = "Milye",
+                add_text = TRUE,
+                percent = FALSE,
+                theme = visualizeR::theme_reach(
+                  font = "Leelawadee",
+                  text_size = 12,
+                  title_size = 13,
+                  panel_background_color = "#FFFFFF",
+                  grid_x = TRUE,
+                  palette = "primary",
+                  text_font_face = "plain")
               ) +
-                ggplot2::geom_text(
-                  ggplot2::aes(
-                    label = stat,
-                    group = milieu),
-                  hjust = 1.5,
-                  colour = "white",
-                  fontface = "bold",
-                  position = ggplot2::position_dodge(width = 0.8))
+                ggplot2::scale_x_discrete(labels = scales::label_wrap(70))
 
             }
           }
@@ -451,25 +424,28 @@ mod_graph_main_server <- function(id) {
 
           if (input$disagg == "National")  graph <- graph + ggplot2::ggtitle(indicator_name())
 
-          graph <- graph +
-            ggplot2::theme(
-              legend.position = ifelse(input$milieu == "Rural et urbain", "right", "none"),
-              legend.direction = "vertical",
-              plot.title = ggplot2::element_text(vjust = 3))
-            # ggplot2::guides(fill = ggplot2::guide_legend(ncol = 1))
-            # ggplot2::scale_x_continuous(sec.axis = ggplot2::dup_axis()) +
-
 
           return(graph)
         }
       )
 
-    shiny::observeEvent(input$download_graph, {
-      shinyscreenshot::screenshot(
-        id = "graph",
-        filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National", paste0(" - ", input$choice), ""))
-      )
-    })
+
+    # output$download_graph <- shiny::downloadHandler(
+    #   filename = function(){
+    #     paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National", paste0(" - ", input$choice), ""),".png")
+    #     },
+    #   content = function(file){
+    #     ggplot2::ggsave(file, plot = output$graph)
+    #   }
+    # )
+
+
+#     shiny::observeEvent(input$download_graph, {
+#       shinyscreenshot::screenshot(
+#         id = "graph",
+#         filename = paste0("HTI MSNA 2022 - ", input$disagg, " - ", input$indicator, ifelse(input$disagg != "National", paste0(" - ", input$choice), ""))
+      # )
+    # })
   })
 }
 

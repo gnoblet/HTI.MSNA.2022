@@ -34,8 +34,8 @@ app_ui <- function(request) {
       mod_graph_main_ui("graph_main_1"),
       mod_map_main_ui("map_main_1"),
       mod_zmpap_ui("zmpap_1"),
-      mod_apropos_ui("apropos_1")
-      # )
+      mod_apropos_ui("apropos_1"),
+      mod_outputs_ui("outputs_1")
     )
   )
 }
